@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package secfacts.v1;
+
+option go_package = "github.com/secfacts/secfacts/api/proto/secfacts/v1;secfactsv1";
+
+message Document {
+  string schema_version = 1;
+  string generated_at = 2;
+  SourceDescriptor source = 3;
+  Summary summary = 4;
+  repeated Finding findings = 5;
+  repeated RootCauseCluster correlations = 6;
+}
+
+message Summary {
+  uint64 total_findings = 1;
+  uint64 unique_findings = 2;
+  uint64 correlated_findings = 3;
+}
+
+message SourceDescriptor {
+  string provider = 1;
+  string tool_name = 2;
+  string tool_version = 3;
+  string format = 4;
+  string format_version = 5;
+  string uri = 6;
+  string generated_at = 7;
+}
+
+message Finding {
+  string schema_version = 1;
+  string id = 2;
+  string kind = 3;
+  string title = 4;
+  string description = 5;
+  Severity severity = 6;
+  string confidence = 7;
+  Rule rule = 8;
+  Location primary_location = 9;
+  repeated Location locations = 10;
+  Artifact artifact = 11;
+  Package package = 12;
+  Image image = 13;
+  CloudResource cloud = 14;
+  Secret secret = 15;
+  Vulnerability vulnerability = 16;
+  repeated Reference references = 17;
+  repeated string tags = 18;
+  SourceRecord source = 19;
+  Identity identity = 20;
+  repeated RootCauseHint root_cause_hints = 21;
+  map<string, string> annotations = 22;
+  string first_observed_at = 23;
+  string last_observed_at = 24;
+  string raw_record_checksum = 25;
+}
+
+message Severity {
+  double score = 1;
+  string label = 2;
+  string vector = 3;
+}
+
+message Rule {
+  string id = 1;
+  string name = 2;
+  string category = 3;
+  string subcategory = 4;
+}
+
+message Location {
+  string uri = 1;
+  uint32 line = 2;
+  uint32 column = 3;
+  uint32 end_line = 4;
+  uint32 end_column = 5;
+  string snippet_digest = 6;
+}
+
+message Artifact {
+  string type = 1;
+  string name = 2;
+  string namespace = 3;
+  string version = 4;
+}
+
+message Package {
+  string type = 1;
+  string name = 2;
+  string version = 3;
+  string fixed_version = 4;
+  string language = 5;
+  string package_url = 6;
+  repeated string dependency_chain = 7;
+}
+
+message Image {
+  string registry = 1;
+  string repository = 2;
+  string tag = 3;
+  string digest = 4;
+  string base_digest = 5;
+  string base_name = 6;
+}
+
+message CloudResource {
+  string provider = 1;
+  string account_id = 2;
+  string region = 3;
+  string service = 4;
+  string resource_id = 5;
+  string resource_arn = 6;
+}
+
+message Secret {
+  string type = 1;
+  string provider = 2;
+  string fingerprint = 3;
+  string redacted = 4;
+}
+
+message Vulnerability {
+  string id = 1;
+  repeated string aliases = 2;
+  repeated string cwe = 3;
+  string cvss_vector = 4;
+  double cvss_score = 5;
+  string attack_vector = 6;
+  string exploitability = 7;
+}
+
+message Reference {
+  string type = 1;
+  string url = 2;
+  string id = 3;
+}
+
+message SourceRecord {
+  string provider = 1;
+  string scanner = 2;
+  string scanner_version = 3;
+  string finding_id = 4;
+  string run_id = 5;
+}
+
+message Identity {
+  string dedup_key = 1;
+  string natural_key = 2;
+  string fingerprint_v1 = 3;
+}
+
+message RootCauseHint {
+  string type = 1;
+  string key = 2;
+  string value = 3;
+}
+
+message RootCauseCluster {
+  string id = 1;
+  string key = 2;
+  string type = 3;
+  string title = 4;
+  repeated string finding_ids = 5;
+  Finding representative = 6;
+}

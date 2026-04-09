@@ -1,0 +1,184 @@
+{
+  "SchemaVersion": "secfacts.iem/v1alpha1",
+  "GeneratedAt": "2026-04-09T14:47:06.8470262Z",
+  "Source": {
+    "Provider": "secfacts",
+    "ToolName": "secfacts",
+    "ToolVersion": "0.1.0-dev",
+    "Format": "auto",
+    "FormatVersion": "",
+    "URI": "",
+    "GeneratedAt": "0001-01-01T00:00:00Z"
+  },
+  "Summary": {
+    "TotalFindings": 2,
+    "UniqueFindings": 2,
+    "CorrelatedFindings": 0
+  },
+  "Findings": [
+    {
+      "SchemaVersion": "secfacts.iem/v1alpha1",
+      "ID": "fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
+      "Kind": "sca",
+      "Title": "OpenSSL vulnerability",
+      "Description": "openssl issue",
+      "Severity": {
+        "Score": 8.2,
+        "Label": "high",
+        "Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "Confidence": "",
+      "Rule": {
+        "ID": "CVE-2024-0001",
+        "Name": "OpenSSL vulnerability",
+        "Category": "vulnerability",
+        "Subcategory": ""
+      },
+      "PrimaryLocation": {
+        "URI": "",
+        "Line": 0,
+        "Column": 0,
+        "EndLine": 0,
+        "EndColumn": 0,
+        "SnippetDigest": ""
+      },
+      "Locations": null,
+      "Artifact": {
+        "Type": "container_image",
+        "Name": "alpine:3.19",
+        "Namespace": "",
+        "Version": ""
+      },
+      "Package": {
+        "Type": "alpine",
+        "Name": "openssl",
+        "Version": "1.0.2",
+        "FixedVersion": "1.0.3",
+        "Language": "",
+        "PackageURL": "pkg:apk/alpine/openssl@1.0.2",
+        "DependencyChain": null
+      },
+      "Image": {
+        "Registry": "",
+        "Repository": "alpine:3.19",
+        "Tag": "",
+        "Digest": "sha256:deadbeef",
+        "BaseDigest": "",
+        "BaseName": ""
+      },
+      "Cloud": null,
+      "Secret": null,
+      "Vulnerability": {
+        "ID": "CVE-2024-0001",
+        "Aliases": null,
+        "CWE": null,
+        "CVSSVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+        "CVSSScore": 8.2,
+        "AttackVector": "",
+        "Exploitability": ""
+      },
+      "References": [
+        {
+          "Type": "advisory",
+          "URL": "https://example.com/cve",
+          "ID": ""
+        }
+      ],
+      "Tags": null,
+      "Source": {
+        "Provider": "secfacts",
+        "Scanner": "secfacts",
+        "ScannerVersion": "0.1.0-dev",
+        "FindingID": "CVE-2024-0001",
+        "RunID": ""
+      },
+      "Identity": {
+        "DedupKey": "a76db6a11145aefc885ba8f39a6a29468746237defedf5775830eea43f9ac137",
+        "NaturalKey": "cee947f543402fc78335a3d91d1715993a796781d4ba4bdb114ec26ff471b3be",
+        "FingerprintV1": "fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a"
+      },
+      "RootCauseHints": [
+        {
+          "Type": "dependency",
+          "Key": "package",
+          "Value": "pkg:apk/alpine/openssl@1.0.2"
+        }
+      ],
+      "Annotations": null,
+      "FirstObservedAt": null,
+      "LastObservedAt": null,
+      "RawRecordChecksum": ""
+    },
+    {
+      "SchemaVersion": "secfacts.iem/v1alpha1",
+      "ID": "bc9dde3248ef2e195b0c252fe919947d74110bad6d958b75fab9e376ca1155fc",
+      "Kind": "secrets",
+      "Title": "AWS secret detected",
+      "Description": "AWS",
+      "Severity": {
+        "Score": 9,
+        "Label": "critical",
+        "Vector": ""
+      },
+      "Confidence": "",
+      "Rule": {
+        "ID": "aws-access-key-id",
+        "Name": "AWS secret detected",
+        "Category": "secret",
+        "Subcategory": ""
+      },
+      "PrimaryLocation": {
+        "URI": "app/config/.env",
+        "Line": 12,
+        "Column": 0,
+        "EndLine": 12,
+        "EndColumn": 0,
+        "SnippetDigest": ""
+      },
+      "Locations": null,
+      "Artifact": {
+        "Type": "file",
+        "Name": "app/config/.env",
+        "Namespace": "",
+        "Version": ""
+      },
+      "Package": null,
+      "Image": {
+        "Registry": "",
+        "Repository": "alpine:3.19",
+        "Tag": "",
+        "Digest": "sha256:deadbeef",
+        "BaseDigest": "",
+        "BaseName": ""
+      },
+      "Cloud": null,
+      "Secret": {
+        "Type": "AWS",
+        "Provider": "trivy",
+        "Fingerprint": "secret-fp",
+        "Redacted": "AKI***EST"
+      },
+      "Vulnerability": null,
+      "References": null,
+      "Tags": null,
+      "Source": {
+        "Provider": "secfacts",
+        "Scanner": "secfacts",
+        "ScannerVersion": "0.1.0-dev",
+        "FindingID": "aws-access-key-id",
+        "RunID": ""
+      },
+      "Identity": {
+        "DedupKey": "03686d7b6be0386cb67856a22305a548bd4cd1a0a7d17f3324698e5e3a7fc239",
+        "NaturalKey": "627be401004c5cfef4263ea63f44a45343d62dff5a646c65370e26b7dc275452",
+        "FingerprintV1": "bc9dde3248ef2e195b0c252fe919947d74110bad6d958b75fab9e376ca1155fc"
+      },
+      "RootCauseHints": [],
+      "Annotations": null,
+      "FirstObservedAt": null,
+      "LastObservedAt": null,
+      "RawRecordChecksum": ""
+    }
+  ],
+  "Correlations": []
+}

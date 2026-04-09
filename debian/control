@@ -1,0 +1,25 @@
+Source: secfacts
+Section: utils
+Priority: optional
+Maintainer: Secfacts Maintainers <team@secfacts.org>
+Build-Depends: debhelper-compat (= 13),
+               dh-golang,
+               golang-any (>= 1.25)
+Standards-Version: 4.6.2
+Homepage: https://github.com/secfacts/secfacts
+Rules-Requires-Root: no
+Go-Import-Path: github.com/secfacts/secfacts
+
+Package: secfacts
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: High-performance security evidence normalization & correlation engine
+ secfacts is a specialized tool designed to combat security alert fatigue.
+ It transforms raw findings from multiple scanners (SAST, DAST, SCA, Cloud)
+ into actionable logical issues using a sharded actor correlation engine.
+ .
+ Key features:
+  * Zero-copy streaming JSON/SARIF ingestion.
+  * Deterministic lock-free deduplication.
+  * Context-aware severity scoring.
+  * CI/CD ready with configurable thresholds.

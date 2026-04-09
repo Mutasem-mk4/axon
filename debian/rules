@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+# Standard Debian Go rules using dh-golang
+export DH_GOPACKAGE := github.com/secfacts/secfacts
+
+%:
+	dh $@ --buildsystem=golang --with=golang
+
+# Enable hardening and optimization
+override_dh_auto_build:
+	dh_auto_build -- -ldflags "-s -w -X main.version=1.0.0"
+
+# Avoid building unwanted sub-packages or internal commands
+override_dh_auto_install:
+	dh_auto_install --destdir=debian/secfacts
+	rm -rf debian/secfacts/usr/lib

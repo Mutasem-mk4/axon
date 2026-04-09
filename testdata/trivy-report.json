@@ -1,0 +1,51 @@
+{
+  "ArtifactName": "alpine:3.19",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "ImageID": "sha256:deadbeef"
+  },
+  "Results": [
+    {
+      "Target": "alpine:3.19 (alpine 3.19.1)",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2024-0001",
+          "PkgName": "openssl",
+          "InstalledVersion": "1.0.2",
+          "FixedVersion": "1.0.3",
+          "Severity": "HIGH",
+          "Title": "OpenSSL vulnerability",
+          "Description": "openssl issue",
+          "PrimaryURL": "https://example.com/cve",
+          "PkgIdentifier": {
+            "PURL": "pkg:apk/alpine/openssl@1.0.2"
+          },
+          "CVSS": {
+            "nvd": {
+              "V3Score": 8.2,
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "Target": "app/config/.env",
+      "Class": "secret",
+      "Secrets": [
+        {
+          "RuleID": "aws-access-key-id",
+          "Category": "AWS",
+          "Severity": "CRITICAL",
+          "Title": "AWS secret detected",
+          "Match": "AKIA1234567890TEST",
+          "StartLine": 12,
+          "EndLine": 12,
+          "Fingerprint": "secret-fp"
+        }
+      ]
+    }
+  ]
+}

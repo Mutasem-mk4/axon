@@ -1,0 +1,107 @@
+[
+  {
+    "SchemaVersion": "2018-10-08",
+    "Id": "urn:secfacts:finding:db0528fcc39e98c385f4e4d0b4b1b9cb7e9049c6d219a4a1f95a307a8f884954",
+    "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
+    "ProductName": "secfacts",
+    "AwsAccountId": "123456789012",
+    "GeneratorId": "secfacts/cli",
+    "Types": [
+      "Software and Configuration Checks/Vulnerabilities/Code"
+    ],
+    "CreatedAt": "2026-04-09T14:32:18Z",
+    "UpdatedAt": "2026-04-09T14:32:18Z",
+    "Severity": {
+      "Label": "MEDIUM",
+      "Normalized": 50,
+      "Original": "5.0"
+    },
+    "Title": "tainted user input reaches sink",
+    "Description": "tainted user input reaches sink",
+    "Resources": [
+      {
+        "Type": "Other",
+        "Id": "internal/repository/user.go",
+        "Region": "us-east-1",
+        "Details": {
+          "Other": {
+            "ArtifactName": "",
+            "ArtifactType": "",
+            "RuleID": "go.sql.injection",
+            "URI": "internal/repository/user.go"
+          }
+        }
+      }
+    ],
+    "FindingProviderFields": {
+      "Severity": {
+        "Label": "MEDIUM",
+        "Normalized": 50,
+        "Original": "5.0"
+      },
+      "Types": [
+        "Software and Configuration Checks/Vulnerabilities/Code"
+      ]
+    },
+    "ProductFields": {
+      "secfacts/dedup_key": "3eec261b5afa9281f1a06d21ae02d99052424d188aa8ff86038ae19e098a136e",
+      "secfacts/fingerprint_v1": "db0528fcc39e98c385f4e4d0b4b1b9cb7e9049c6d219a4a1f95a307a8f884954",
+      "secfacts/kind": "sast",
+      "secfacts/natural_key": "47e29cbae7f8ce0a5b620a7e27e81ab3c07b2420282a1c017fae89c0b3008aed",
+      "secfacts/provider": "secfacts"
+    }
+  },
+  {
+    "SchemaVersion": "2018-10-08",
+    "Id": "urn:secfacts:finding:fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
+    "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
+    "ProductName": "secfacts",
+    "AwsAccountId": "123456789012",
+    "GeneratorId": "secfacts/cli",
+    "Types": [
+      "Software and Configuration Checks/Vulnerabilities/CVE"
+    ],
+    "CreatedAt": "2026-04-09T14:32:18Z",
+    "UpdatedAt": "2026-04-09T14:32:18Z",
+    "Severity": {
+      "Label": "HIGH",
+      "Normalized": 82,
+      "Original": "8.2"
+    },
+    "Title": "openssl vulnerable package",
+    "Description": "openssl vulnerable package",
+    "Resources": [
+      {
+        "Type": "Software and Configuration Checks",
+        "Id": "pkg:apk/alpine/openssl@1.0.2",
+        "Region": "us-east-1",
+        "Details": {
+          "Other": {
+            "FixedVersion": "1.0.3",
+            "Language": "",
+            "PackageName": "openssl",
+            "PackageURL": "pkg:apk/alpine/openssl@1.0.2",
+            "Version": "1.0.2"
+          }
+        }
+      }
+    ],
+    "FindingProviderFields": {
+      "Severity": {
+        "Label": "HIGH",
+        "Normalized": 82,
+        "Original": "8.2"
+      },
+      "Types": [
+        "Software and Configuration Checks/Vulnerabilities/CVE"
+      ]
+    },
+    "ProductFields": {
+      "secfacts/dedup_key": "a76db6a11145aefc885ba8f39a6a29468746237defedf5775830eea43f9ac137",
+      "secfacts/fingerprint_v1": "fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
+      "secfacts/kind": "sca",
+      "secfacts/natural_key": "cee947f543402fc78335a3d91d1715993a796781d4ba4bdb114ec26ff471b3be",
+      "secfacts/provider": "secfacts"
+    }
+  }
+]

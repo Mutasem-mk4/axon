@@ -1,0 +1,36 @@
+Subject: ITP: secfacts -- High-performance security evidence normalization engine
+
+To: submit@bugs.kali.org
+From: Secfacts Maintainers <team@secfacts.org>
+
+Dear Kali Linux Maintainers,
+
+I am writing to formally submit an "Intent to Package" (ITP) for **secfacts**, a high-performance security evidence normalization and correlation engine. We believe this tool would be a valuable addition to the Kali Linux repositories, specifically within the DevSecOps and vulnerability assessment toolsets.
+
+### Why secfacts is a "Must-Have" for Kali Linux
+
+Modern penetration testing and security auditing often involve running multiple automated scanners (e.g., Trivy, Gitleaks, Checkov, Grype). This frequently results in "Alert Fatigue," where thousands of redundant findings are produced, making it difficult to identify the truly critical vulnerabilities.
+
+`secfacts` solves this problem by acting as a high-speed broker between raw scanners and the human auditor. It provides:
+1. **Deduplication:** Collapses identical findings from different tools into a single logical record.
+2. **Correlation:** Groups findings by resource (e.g., an S3 bucket or a package) to identify root causes.
+3. **Context-Aware Scoring:** Dynamically weights severity based on compound risks (e.g., a vulnerability combined with an exposure).
+
+### Technical Specifications
+- **Language:** Go 1.25+
+- **Architecture:** Sharded Actor Model for lock-free concurrency.
+- **Performance:** Zero-copy, streaming JSON/SARIF ingestion designed for multi-gigabyte reports.
+- **Security:** Memory-safe (Go) and adheres to minimalist principles (distroless-ready).
+- **License:** Apache License 2.0 (DFSG compliant).
+
+### Integration into the Kali Workflow
+For a penetration tester on a Kali machine, `secfacts` provides a "summary of truth" from various tool outputs. It allows the auditor to quickly identify the most critical entry points (e.g., "Exposed Vulnerable Assets") without wading through raw JSON/SARIF logs.
+
+The project is stable, production-ready, and follows standard Go packaging practices. We have already prepared a `debian/` packaging structure (attached) compatible with `dh-golang`.
+
+We look forward to your feedback and hope to see `secfacts` in the official Kali repositories soon.
+
+Best regards,
+
+The Secfacts Maintainers
+https://github.com/secfacts/secfacts

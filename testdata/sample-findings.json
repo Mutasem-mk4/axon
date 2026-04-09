@@ -1,0 +1,43 @@
+[
+  {
+    "Kind": "sca",
+    "Title": "openssl vulnerable package",
+    "Rule": {
+      "ID": "CVE-2024-0001",
+      "Name": "OpenSSL vulnerability"
+    },
+    "Severity": {
+      "Label": "high"
+    },
+    "Package": {
+      "Name": "openssl",
+      "Version": "1.0.2",
+      "FixedVersion": "1.0.3",
+      "PackageURL": "pkg:apk/alpine/openssl@1.0.2"
+    },
+    "Vulnerability": {
+      "ID": "CVE-2024-0001",
+      "CVSSScore": 8.2
+    }
+  },
+  {
+    "Kind": "sast",
+    "Title": "tainted user input reaches sink",
+    "Rule": {
+      "ID": "go.sql.injection",
+      "Name": "SQL injection"
+    },
+    "Severity": {
+      "Label": "medium"
+    },
+    "PrimaryLocation": {
+      "URI": "internal/repository/user.go",
+      "Line": 44
+    },
+    "Annotations": {
+      "sast.source": "http.request.param.id",
+      "sast.sink": "db.query",
+      "sast.function": "FindUser"
+    }
+  }
+]

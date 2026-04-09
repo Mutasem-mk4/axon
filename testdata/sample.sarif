@@ -1,0 +1,78 @@
+{
+  "version": "2.1.0",
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "secfacts",
+          "version": "0.1.0-dev",
+          "rules": [
+            {
+              "id": "CVE-2024-0001",
+              "name": "OpenSSL vulnerability",
+              "shortDescription": {
+                "text": "openssl vulnerable package"
+              }
+            },
+            {
+              "id": "go.sql.injection",
+              "name": "SQL injection",
+              "shortDescription": {
+                "text": "tainted user input reaches sink"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CVE-2024-0001",
+          "level": "error",
+          "message": {
+            "text": "openssl vulnerable package"
+          },
+          "partialFingerprints": {
+            "dedupKey": "a76db6a11145aefc885ba8f39a6a29468746237defedf5775830eea43f9ac137",
+            "fingerprintV1": "fa42fd676aede3f6e534f9cc4db4a8e098a4228812beae5b54d1687d7bfb3d6a",
+            "naturalKeyHash": "cee947f543402fc78335a3d91d1715993a796781d4ba4bdb114ec26ff471b3be"
+          },
+          "properties": {
+            "kind": "sca",
+            "provider": "secfacts",
+            "severity_score": 8.2
+          }
+        },
+        {
+          "ruleId": "go.sql.injection",
+          "level": "warning",
+          "message": {
+            "text": "tainted user input reaches sink"
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "internal/repository/user.go"
+                },
+                "region": {
+                  "startLine": 44
+                }
+              }
+            }
+          ],
+          "partialFingerprints": {
+            "dedupKey": "3eec261b5afa9281f1a06d21ae02d99052424d188aa8ff86038ae19e098a136e",
+            "fingerprintV1": "db0528fcc39e98c385f4e4d0b4b1b9cb7e9049c6d219a4a1f95a307a8f884954",
+            "naturalKeyHash": "47e29cbae7f8ce0a5b620a7e27e81ab3c07b2420282a1c017fae89c0b3008aed"
+          },
+          "properties": {
+            "kind": "sast",
+            "provider": "secfacts",
+            "severity_score": 5
+          }
+        }
+      ]
+    }
+  ]
+}

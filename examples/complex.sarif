@@ -1,0 +1,108 @@
+{
+  "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Trivy",
+          "version": "0.49.1",
+          "rules": [
+            {
+              "id": "CVE-2024-22243",
+              "shortDescription": {
+                "text": "Spring Framework URL Parsing Vulnerability"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CVE-2024-22243",
+          "level": "error",
+          "message": {
+            "text": "Spring Framework versions 6.1.0 - 6.1.3 are vulnerable to a URL parsing issue."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "libs/spring-core-6.1.2.jar"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tool": {
+        "driver": {
+          "name": "Checkov",
+          "version": "3.2.1",
+          "rules": [
+            {
+              "id": "CKV_AWS_19",
+              "shortDescription": {
+                "text": "S3 bucket has public access"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "CKV_AWS_19",
+          "level": "warning",
+          "message": {
+            "text": "S3 bucket 'prod-assets-public' is publicly accessible."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "arn:aws:s3:::prod-assets-public"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "tool": {
+        "driver": {
+          "name": "Gitleaks",
+          "version": "8.18.2",
+          "rules": [
+            {
+              "id": "generic-api-key",
+              "shortDescription": {
+                "text": "Generic API Key found"
+              }
+            }
+          ]
+        }
+      },
+      "results": [
+        {
+          "ruleId": "generic-api-key",
+          "level": "error",
+          "message": {
+            "text": "Potential AWS Access Key ID leaked."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "arn:aws:s3:::prod-assets-public"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

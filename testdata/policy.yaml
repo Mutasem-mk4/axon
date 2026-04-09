@@ -1,0 +1,7 @@
+fail_on_severity: high
+fail_on_new_only: true
+max_count_thresholds:
+  critical: 0
+allowlist:
+  - fingerprint_v1: ignore-me
+    reason: accepted risk

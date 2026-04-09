@@ -1,0 +1,107 @@
+[
+  {
+    "SchemaVersion": "2018-10-08",
+    "Id": "urn:secfacts:finding:fp-sca",
+    "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
+    "ProductName": "secfacts",
+    "AwsAccountId": "123456789012",
+    "GeneratorId": "secfacts/test",
+    "Types": [
+      "Software and Configuration Checks/Vulnerabilities/CVE"
+    ],
+    "CreatedAt": "2026-04-09T10:00:00Z",
+    "UpdatedAt": "2026-04-09T10:00:00Z",
+    "Severity": {
+      "Label": "HIGH",
+      "Normalized": 82,
+      "Original": "8.2"
+    },
+    "Title": "openssl vulnerable package",
+    "Description": "openssl vulnerable package",
+    "Resources": [
+      {
+        "Type": "Software and Configuration Checks",
+        "Id": "pkg:apk/alpine/openssl@1.0.2",
+        "Region": "us-east-1",
+        "Details": {
+          "Other": {
+            "FixedVersion": "1.0.3",
+            "Language": "",
+            "PackageName": "openssl",
+            "PackageURL": "pkg:apk/alpine/openssl@1.0.2",
+            "Version": "1.0.2"
+          }
+        }
+      }
+    ],
+    "FindingProviderFields": {
+      "Severity": {
+        "Label": "HIGH",
+        "Normalized": 82,
+        "Original": "8.2"
+      },
+      "Types": [
+        "Software and Configuration Checks/Vulnerabilities/CVE"
+      ]
+    },
+    "ProductFields": {
+      "secfacts/dedup_key": "dedup-sca",
+      "secfacts/fingerprint_v1": "fp-sca",
+      "secfacts/kind": "sca",
+      "secfacts/natural_key": "natural-sca",
+      "secfacts/provider": ""
+    }
+  },
+  {
+    "SchemaVersion": "2018-10-08",
+    "Id": "urn:secfacts:finding:fp-sast",
+    "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
+    "ProductName": "secfacts",
+    "AwsAccountId": "123456789012",
+    "GeneratorId": "secfacts/test",
+    "Types": [
+      "Software and Configuration Checks/Vulnerabilities/Code"
+    ],
+    "CreatedAt": "2026-04-09T10:00:00Z",
+    "UpdatedAt": "2026-04-09T10:00:00Z",
+    "Severity": {
+      "Label": "MEDIUM",
+      "Normalized": 50,
+      "Original": "5.0"
+    },
+    "Title": "tainted input reaches sink",
+    "Description": "tainted input reaches sink",
+    "Resources": [
+      {
+        "Type": "Other",
+        "Id": "internal/repository/user.go",
+        "Region": "us-east-1",
+        "Details": {
+          "Other": {
+            "ArtifactName": "internal/repository/user.go",
+            "ArtifactType": "file",
+            "RuleID": "go.sql.injection",
+            "URI": "internal/repository/user.go"
+          }
+        }
+      }
+    ],
+    "FindingProviderFields": {
+      "Severity": {
+        "Label": "MEDIUM",
+        "Normalized": 50,
+        "Original": "5.0"
+      },
+      "Types": [
+        "Software and Configuration Checks/Vulnerabilities/Code"
+      ]
+    },
+    "ProductFields": {
+      "secfacts/dedup_key": "dedup-sast",
+      "secfacts/fingerprint_v1": "fp-sast",
+      "secfacts/kind": "sast",
+      "secfacts/natural_key": "natural-sast",
+      "secfacts/provider": ""
+    }
+  }
+]
