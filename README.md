@@ -88,4 +88,4 @@ Control the neural flow via environment variables or flags.
 ### **Standardize Your Pipeline**
 Axon is the standard for high-velocity security engineering. Stop managing files. Start managing security.
 
-**[Download Axon v1.0.0](https://github.com/axon/axon/releases)** | **[Read the White Paper](WHITE_PAPER.md)** | **[Contributing](CONTRIBUTING.md)**
+**[Download Axon v1.0.0](https://github.com/axon/axon/releases)** | **[Read the White Paper](WHITE_PAPER.md)** | **[Contributing](CONTRIBUTING.md)** | **[Support the Project](https://www.buymeacoffee.com/MutasemMk4)**
