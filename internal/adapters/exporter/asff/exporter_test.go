@@ -5,6 +5,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -47,9 +48,9 @@ func TestExporterGolden(t *testing.T) {
 					ID: "CVE-2024-0001",
 				},
 				Identity: evidence.Identity{
-					FingerprintV1: "fp-sca",
-					DedupKey:      "dedup-sca",
-					NaturalKey:    "natural-sca",
+					FingerprintV1: testHash('a'),
+					DedupKey:      testHash('b'),
+					NaturalKey:    testHash('c'),
 				},
 				FirstObservedAt: &observedAt,
 				LastObservedAt:  &observedAt,
@@ -75,9 +76,9 @@ func TestExporterGolden(t *testing.T) {
 					Type: "file",
 				},
 				Identity: evidence.Identity{
-					FingerprintV1: "fp-sast",
-					DedupKey:      "dedup-sast",
-					NaturalKey:    "natural-sast",
+					FingerprintV1: testHash('d'),
+					DedupKey:      testHash('e'),
+					NaturalKey:    testHash('f'),
 				},
 				FirstObservedAt: &observedAt,
 				LastObservedAt:  &observedAt,
@@ -161,4 +162,13 @@ func TestMapCloudResourceRefinesAWSResourceTypes(t *testing.T) {
 	if lambda.Id != "arn:aws:lambda:us-east-1:123456789012:function:my-function" {
 		t.Fatalf("unexpected lambda ARN: %s", lambda.Id)
 	}
+}
+
+func testHash(ch byte) evidence.Hash {
+	hash, ok := evidence.ParseHash(strings.Repeat(string([]byte{ch}), 64))
+	if !ok {
+		panic("invalid test hash")
+	}
+
+	return hash
 }

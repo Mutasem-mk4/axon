@@ -20,7 +20,7 @@ func TestLoadIEMJSONReadsExportedDocument(t *testing.T) {
     {
       "ID":"finding-1",
       "Kind":"sca",
-      "Identity":{"FingerprintV1":"abc123"}
+      "Identity":{"FingerprintV1":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
     }
   ]
 }`
@@ -35,7 +35,7 @@ func TestLoadIEMJSONReadsExportedDocument(t *testing.T) {
 	if len(document.Findings) != 1 {
 		t.Fatalf("expected 1 finding, got %d", len(document.Findings))
 	}
-	if document.Findings[0].Identity.FingerprintV1 != "abc123" {
+	if document.Findings[0].Identity.FingerprintV1.String() != "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" {
 		t.Fatalf("unexpected fingerprint: %#v", document.Findings[0].Identity)
 	}
 }

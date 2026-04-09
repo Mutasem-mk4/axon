@@ -2,6 +2,7 @@ package policy
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/secfacts/secfacts/internal/domain/evidence"
@@ -12,12 +13,12 @@ func TestCompareCategorizesFindingsByFingerprint(t *testing.T) {
 
 	service := Service{}
 	current := []evidence.Finding{
-		{ID: "new", Identity: evidence.Identity{FingerprintV1: "new"}},
-		{ID: "existing", Identity: evidence.Identity{FingerprintV1: "same"}},
+		{ID: "new", Identity: evidence.Identity{FingerprintV1: testHash('a')}},
+		{ID: "existing", Identity: evidence.Identity{FingerprintV1: testHash('b')}},
 	}
 	baseline := []evidence.Finding{
-		{ID: "old", Identity: evidence.Identity{FingerprintV1: "same"}},
-		{ID: "fixed", Identity: evidence.Identity{FingerprintV1: "fixed"}},
+		{ID: "old", Identity: evidence.Identity{FingerprintV1: testHash('b')}},
+		{ID: "fixed", Identity: evidence.Identity{FingerprintV1: testHash('c')}},
 	}
 
 	diff := service.Compare(current, baseline)
@@ -43,7 +44,7 @@ func TestEvaluateRespectsFailOnNewOnlyAndAllowlist(t *testing.T) {
 				Label: evidence.SeverityHigh,
 			},
 			Identity: evidence.Identity{
-				FingerprintV1: "new-high",
+				FingerprintV1: testHash('d'),
 			},
 		},
 		{
@@ -52,7 +53,7 @@ func TestEvaluateRespectsFailOnNewOnlyAndAllowlist(t *testing.T) {
 				Label: evidence.SeverityCritical,
 			},
 			Identity: evidence.Identity{
-				FingerprintV1: "existing-critical",
+				FingerprintV1: testHash('e'),
 			},
 		},
 	}
@@ -66,7 +67,7 @@ func TestEvaluateRespectsFailOnNewOnlyAndAllowlist(t *testing.T) {
 		FailOnSeverity: evidence.SeverityCritical,
 		FailOnNewOnly:  true,
 		Allowlist: []AllowlistEntry{
-			{FingerprintV1: "new-high"},
+			{FingerprintV1: strings.Repeat("d", 64)},
 		},
 	})
 	if err != nil {
@@ -78,4 +79,13 @@ func TestEvaluateRespectsFailOnNewOnlyAndAllowlist(t *testing.T) {
 	if len(decision.EvaluatedFindings) != 0 {
 		t.Fatalf("expected allowlisted new findings to be removed, got %#v", decision.EvaluatedFindings)
 	}
+}
+
+func testHash(ch byte) evidence.Hash {
+	hash, ok := evidence.ParseHash(strings.Repeat(string([]byte{ch}), 64))
+	if !ok {
+		panic("invalid test hash")
+	}
+
+	return hash
 }

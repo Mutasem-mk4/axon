@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/secfacts/secfacts/internal/adapters/exporters"
 	"github.com/secfacts/secfacts/internal/adapters/ingestion"
@@ -26,7 +27,22 @@ var scanCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx := context.Background()
 
-		// 1. Setup Parser
+		// 1. Auto-Discovery Logic
+		if inputFile == "" {
+			fmt.Println("🔍 No file specified. Searching for security reports...")
+			files, _ := filepath.Glob("*.sarif")
+			if len(files) == 0 {
+				files, _ = filepath.Glob("reports/*.sarif")
+			}
+			if len(files) > 0 {
+				inputFile = files[0]
+				fmt.Printf("✨ Found report: %s\n", inputFile)
+			} else {
+				return fmt.Errorf("could not find any .sarif files. Please specify one with -i")
+			}
+		}
+
+		// 2. Setup Parser
 		p, err := ingestion.GetParser(parserName)
 		if err != nil {
 			return err
@@ -95,7 +111,6 @@ func init() {
 	scanCmd.Flags().StringVarP(&parserName, "parser", "p", "sarif", "Parser to use (default: sarif)")
 	scanCmd.Flags().StringVar(&failOn, "fail-on", "", "Fail on severity level (low, medium, high, critical)")
 	scanCmd.Flags().Float32Var(&failScore, "fail-score", 0, "Fail on specific severity score (e.g., 7.5)")
-	scanCmd.MarkFlagRequired("file")
 
 	rootCmd.AddCommand(scanCmd)
 

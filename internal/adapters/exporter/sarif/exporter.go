@@ -126,9 +126,9 @@ func fromDocument(document evidence.Document) report {
 			Message:   message{Text: finding.Title},
 			Locations: buildLocations(finding),
 			PartialFingerprints: map[string]string{
-				"dedupKey":       finding.Identity.DedupKey,
-				"fingerprintV1":  finding.Identity.FingerprintV1,
-				"naturalKeyHash": finding.Identity.NaturalKey,
+				"dedupKey":       finding.Identity.DedupKey.String(),
+				"fingerprintV1":  finding.Identity.FingerprintV1.String(),
+				"naturalKeyHash": finding.Identity.NaturalKey.String(),
 			},
 			Properties: map[string]any{
 				"kind":           finding.Kind,

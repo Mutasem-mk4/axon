@@ -16,6 +16,7 @@ const opNormalize = "normalize.Service.Normalize"
 
 type Service struct {
 	IdentityBuilder evidence.IdentityBuilder
+	Interner        *evidence.Interner
 }
 
 func (s Service) Normalize(_ context.Context, finding evidence.Finding) (evidence.Finding, error) {
@@ -42,12 +43,56 @@ func (s Service) Normalize(_ context.Context, finding evidence.Finding) (evidenc
 	}
 
 	finding.RootCauseHints = appendNormalizedHints(finding)
+	s.internFinding(&finding)
 	finding.Identity = s.IdentityBuilder.Build(finding)
-	if finding.ID == "" {
-		finding.ID = finding.Identity.FingerprintV1
-	}
 
 	return finding, nil
+}
+
+func (s Service) internFinding(finding *evidence.Finding) {
+	if s.Interner == nil {
+		return
+	}
+
+	finding.SchemaVersion = s.Interner.Intern(finding.SchemaVersion)
+	finding.Kind = evidence.Kind(s.Interner.Intern(string(finding.Kind)))
+	finding.Severity.Label = evidence.SeverityLabel(s.Interner.Intern(string(finding.Severity.Label)))
+	finding.Severity.Vector = s.Interner.Intern(finding.Severity.Vector)
+	finding.Confidence = evidence.Confidence(s.Interner.Intern(string(finding.Confidence)))
+	finding.Rule.Category = s.Interner.Intern(finding.Rule.Category)
+	finding.Rule.Subcategory = s.Interner.Intern(finding.Rule.Subcategory)
+	finding.Artifact.Type = s.Interner.Intern(finding.Artifact.Type)
+	finding.Artifact.Namespace = s.Interner.Intern(finding.Artifact.Namespace)
+	finding.Source.Provider = s.Interner.Intern(finding.Source.Provider)
+	finding.Source.Scanner = s.Interner.Intern(finding.Source.Scanner)
+	finding.Source.ScannerVersion = s.Interner.Intern(finding.Source.ScannerVersion)
+	if finding.Package != nil {
+		finding.Package.Type = s.Interner.Intern(finding.Package.Type)
+		finding.Package.Version = s.Interner.Intern(finding.Package.Version)
+		finding.Package.FixedVersion = s.Interner.Intern(finding.Package.FixedVersion)
+		finding.Package.Language = s.Interner.Intern(finding.Package.Language)
+	}
+	if finding.Image != nil {
+		finding.Image.Registry = s.Interner.Intern(finding.Image.Registry)
+		finding.Image.Repository = s.Interner.Intern(finding.Image.Repository)
+		finding.Image.Tag = s.Interner.Intern(finding.Image.Tag)
+		finding.Image.BaseName = s.Interner.Intern(finding.Image.BaseName)
+	}
+	if finding.Cloud != nil {
+		finding.Cloud.Provider = s.Interner.Intern(finding.Cloud.Provider)
+		finding.Cloud.AccountID = s.Interner.Intern(finding.Cloud.AccountID)
+		finding.Cloud.Region = s.Interner.Intern(finding.Cloud.Region)
+		finding.Cloud.Service = s.Interner.Intern(finding.Cloud.Service)
+	}
+	if finding.Secret != nil {
+		finding.Secret.Type = s.Interner.Intern(finding.Secret.Type)
+		finding.Secret.Provider = s.Interner.Intern(finding.Secret.Provider)
+	}
+	if finding.Vulnerability != nil {
+		finding.Vulnerability.CVSSVector = s.Interner.Intern(finding.Vulnerability.CVSSVector)
+		finding.Vulnerability.AttackVector = s.Interner.Intern(finding.Vulnerability.AttackVector)
+		finding.Vulnerability.Exploitability = s.Interner.Intern(finding.Vulnerability.Exploitability)
+	}
 }
 
 func normalizeSeverity(finding evidence.Finding) (evidence.Severity, error) {

@@ -17,7 +17,7 @@ func (s Service) Fingerprint(_ context.Context, finding evidence.Finding) (evide
 	if s.Builder == nil {
 		return evidence.Identity{}, sferr.New(sferr.CodeInvalidConfig, opFingerprint, "identity builder is required")
 	}
-	if finding.Identity.DedupKey != "" && finding.Identity.FingerprintV1 != "" && finding.Identity.NaturalKey != "" {
+	if !finding.Identity.DedupKey.IsZero() && !finding.Identity.FingerprintV1.IsZero() && !finding.Identity.NaturalKey.IsZero() {
 		return finding.Identity, nil
 	}
 

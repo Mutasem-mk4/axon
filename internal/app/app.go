@@ -151,7 +151,10 @@ func newNormalizeCommand(
 
 			progress := progressObserver{logger: logger, quiet: quiet}
 			identityBuilder := evidence.DefaultIdentityBuilder{}
-			normalizer := normalize.Service{IdentityBuilder: identityBuilder}
+			normalizer := normalize.Service{
+				IdentityBuilder: identityBuilder,
+				Interner:        evidence.NewInterner(),
+			}
 			deduplicator := dedup.Service{Builder: identityBuilder}
 			correlator := correlation.Service{}
 

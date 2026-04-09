@@ -108,6 +108,14 @@ Distributed under the Apache License 2.0. See `LICENSE` for more information.
 
 ---
 
+## ☕ Support the Project
+
+If `secfacts` saved you hours of triage, consider supporting the maintenance of this tool:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/mutasem_mk4)
+
+---
+
 ## 🛠️ Maintainers
 
 `secfacts` is maintained by the security community and intended for inclusion in Kali Linux, Parrot OS, and elite DevSecOps pipelines.

@@ -61,9 +61,9 @@ type Violation struct {
 type Service struct{}
 
 func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) BaselineDiff {
-	seenBaseline := make(map[string]evidence.Finding, len(baseline))
+	seenBaseline := make(map[evidence.Hash]evidence.Finding, len(baseline))
 	for _, finding := range baseline {
-		if finding.Identity.FingerprintV1 == "" {
+		if finding.Identity.FingerprintV1.IsZero() {
 			continue
 		}
 		seenBaseline[finding.Identity.FingerprintV1] = finding
@@ -75,10 +75,10 @@ func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) 
 		Fixed:    make([]evidence.Finding, 0, len(baseline)),
 	}
 
-	seenCurrent := make(map[string]struct{}, len(current))
+	seenCurrent := make(map[evidence.Hash]struct{}, len(current))
 	for _, finding := range current {
 		fingerprint := finding.Identity.FingerprintV1
-		if fingerprint == "" {
+		if fingerprint.IsZero() {
 			diff.New = append(diff.New, finding)
 			continue
 		}
@@ -170,8 +170,11 @@ func isAllowlisted(entries []AllowlistEntry, finding evidence.Finding) bool {
 		if entry.ExpiresAt != nil && entry.ExpiresAt.Before(now) {
 			continue
 		}
-		if entry.FingerprintV1 != "" && entry.FingerprintV1 == finding.Identity.FingerprintV1 {
-			return true
+		if entry.FingerprintV1 != "" {
+			fingerprint, ok := evidence.ParseHash(entry.FingerprintV1)
+			if ok && fingerprint == finding.Identity.FingerprintV1 {
+				return true
+			}
 		}
 		if entry.RuleID != "" && entry.RuleID == finding.Rule.ID {
 			return true

@@ -2,11 +2,8 @@ package evidence
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
-	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -18,18 +15,40 @@ const (
 
 type IdentityBuilder interface {
 	Build(f Finding) Identity
-	BuildNaturalKey(f Finding) string
-	BuildFingerprintV1(f Finding) string
-	BuildDedupKey(f Finding) string
+	BuildNaturalKey(f Finding) Hash
+	BuildFingerprintV1(f Finding) Hash
+	BuildDedupKey(f Finding) Hash
 }
 
 type DefaultIdentityBuilder struct{}
+
+var (
+	hexDecodeTable [256]byte
+	hexValidTable  [256]byte
+)
 
 var identityBufferPool = sync.Pool{
 	New: func() any {
 		buffer := make([]byte, 0, 256)
 		return &buffer
 	},
+}
+
+func init() {
+	for ch := byte('0'); ch <= '9'; ch++ {
+		hexDecodeTable[ch] = ch - '0'
+		hexValidTable[ch] = 1
+	}
+
+	for ch := byte('a'); ch <= 'f'; ch++ {
+		hexDecodeTable[ch] = ch - 'a' + 10
+		hexValidTable[ch] = 1
+	}
+
+	for ch := byte('A'); ch <= 'F'; ch++ {
+		hexDecodeTable[ch] = ch - 'A' + 10
+		hexValidTable[ch] = 1
+	}
 }
 
 func (DefaultIdentityBuilder) Build(f Finding) Identity {
@@ -41,30 +60,31 @@ func (DefaultIdentityBuilder) Build(f Finding) Identity {
 	return Identity{
 		NaturalKey:    hashIdentityBytes(identityNaturalKeyVersion, material),
 		FingerprintV1: fingerprint,
-		DedupKey:      hashIdentityString(identityDedupKeyVersion, fingerprint),
+		DedupKey:      hashIdentityBytes(identityDedupKeyVersion, fingerprint[:]),
 	}
 }
 
-func (DefaultIdentityBuilder) BuildNaturalKey(f Finding) string {
+func (DefaultIdentityBuilder) BuildNaturalKey(f Finding) Hash {
 	material := buildNaturalKeyMaterial(f)
 	defer releaseIdentityBuffer(material)
 
 	return hashIdentityBytes(identityNaturalKeyVersion, material)
 }
 
-func (DefaultIdentityBuilder) BuildFingerprintV1(f Finding) string {
+func (DefaultIdentityBuilder) BuildFingerprintV1(f Finding) Hash {
 	material := buildNaturalKeyMaterial(f)
 	defer releaseIdentityBuffer(material)
 
 	return hashIdentityBytes(identityFingerprintV1, material)
 }
 
-func (b DefaultIdentityBuilder) BuildDedupKey(f Finding) string {
-	return hashIdentityString(identityDedupKeyVersion, b.BuildFingerprintV1(f))
+func (b DefaultIdentityBuilder) BuildDedupKey(f Finding) Hash {
+	fingerprint := b.BuildFingerprintV1(f)
+	return hashIdentityBytes(identityDedupKeyVersion, fingerprint[:])
 }
 
 func buildNaturalKeyMaterial(f Finding) []byte {
-	buffer := acquireIdentityBuffer()
+	buffer := acquireIdentityBufferWithCap(estimateNaturalKeyCapacity(f))
 
 	switch f.Kind {
 	case KindSAST:
@@ -100,18 +120,12 @@ func buildNaturalKeyMaterial(f Finding) []byte {
 	return *buffer
 }
 
-func hashIdentityBytes(version string, material []byte) string {
-	sum := sha256WithVersion(version, material)
-	return hex.EncodeToString(sum[:])
-}
-
-func hashIdentityString(version string, material string) string {
-	sum := sha256WithVersion(version, []byte(material))
-	return hex.EncodeToString(sum[:])
+func hashIdentityBytes(version string, material []byte) Hash {
+	return Hash(sha256WithVersion(version, material))
 }
 
 func sha256WithVersion(version string, material []byte) [32]byte {
-	buffer := acquireIdentityBuffer()
+	buffer := acquireIdentityBufferWithCap(len(version) + 1 + len(material))
 	defer releaseIdentityBuffer(*buffer)
 
 	*buffer = append(*buffer, version...)
@@ -121,43 +135,15 @@ func sha256WithVersion(version string, material []byte) [32]byte {
 	return sha256.Sum256(*buffer)
 }
 
-func ParseSHA256Hex(value string) ([32]byte, bool) {
-	var decoded [32]byte
-	if len(value) != 64 {
-		return decoded, false
-	}
-
-	for i := 0; i < len(decoded); i++ {
-		hi, ok := fromHexNibble(value[i*2])
-		if !ok {
-			return decoded, false
-		}
-		lo, ok := fromHexNibble(value[i*2+1])
-		if !ok {
-			return decoded, false
-		}
-
-		decoded[i] = (hi << 4) | lo
-	}
-
-	return decoded, true
-}
-
-func fromHexNibble(ch byte) (byte, bool) {
-	switch {
-	case ch >= '0' && ch <= '9':
-		return ch - '0', true
-	case ch >= 'a' && ch <= 'f':
-		return ch - 'a' + 10, true
-	case ch >= 'A' && ch <= 'F':
-		return ch - 'A' + 10, true
-	default:
-		return 0, false
-	}
-}
-
 func acquireIdentityBuffer() *[]byte {
+	return acquireIdentityBufferWithCap(0)
+}
+
+func acquireIdentityBufferWithCap(n int) *[]byte {
 	buffer := identityBufferPool.Get().(*[]byte)
+	if cap(*buffer) < n {
+		*buffer = make([]byte, 0, n)
+	}
 	*buffer = (*buffer)[:0]
 	return buffer
 }
@@ -168,19 +154,74 @@ func releaseIdentityBuffer(buffer []byte) {
 }
 
 func appendNormalizedSegment(buffer *[]byte, value string) {
-	if len(*buffer) > 0 {
-		*buffer = append(*buffer, '|')
+	out := *buffer
+	if len(out) > 0 {
+		out = append(out, '|')
 	}
 
-	appendLowerTrimmed(buffer, value)
+	seenNonSpace := false
+	pendingSpaces := 0
+
+	for i, n := 0, len(value); i < n; i++ {
+		ch := value[i]
+		if !seenNonSpace && isIdentitySpace(ch) {
+			continue
+		}
+
+		if isIdentitySpace(ch) {
+			pendingSpaces++
+			continue
+		}
+
+		seenNonSpace = true
+		for ; pendingSpaces > 0; pendingSpaces-- {
+			out = append(out, ' ')
+		}
+		if ch >= 'A' && ch <= 'Z' {
+			ch += 'a' - 'A'
+		}
+
+		out = append(out, ch)
+	}
+
+	*buffer = out
 }
 
 func appendNormalizedPathSegment(buffer *[]byte, value string) {
-	if len(*buffer) > 0 {
-		*buffer = append(*buffer, '|')
+	out := *buffer
+	if len(out) > 0 {
+		out = append(out, '|')
 	}
 
-	appendLowerTrimmedPath(buffer, value)
+	seenNonSpace := false
+	pendingSpaces := 0
+
+	for i, n := 0, len(value); i < n; i++ {
+		ch := value[i]
+		if !seenNonSpace && isIdentitySpace(ch) {
+			continue
+		}
+
+		if isIdentitySpace(ch) {
+			pendingSpaces++
+			continue
+		}
+
+		seenNonSpace = true
+		for ; pendingSpaces > 0; pendingSpaces-- {
+			out = append(out, ' ')
+		}
+		if ch == '\\' {
+			ch = '/'
+		}
+		if ch >= 'A' && ch <= 'Z' {
+			ch += 'a' - 'A'
+		}
+
+		out = append(out, ch)
+	}
+
+	*buffer = out
 }
 
 func appendNormalizedLineSegment(buffer *[]byte, line int) {
@@ -195,78 +236,45 @@ func appendNormalizedLineSegment(buffer *[]byte, line int) {
 	*buffer = strconv.AppendInt(*buffer, int64(line), 10)
 }
 
-func appendLowerTrimmed(buffer *[]byte, value string) {
-	start, end := trimBounds(value)
-	for i := start; i < end; i++ {
-		ch := value[i]
-		if ch >= 'A' && ch <= 'Z' {
-			ch += 'a' - 'A'
-		}
-		*buffer = append(*buffer, ch)
+func estimateNaturalKeyCapacity(f Finding) int {
+	capacity := 32
+
+	switch f.Kind {
+	case KindSAST:
+		capacity += len(f.Rule.ID)
+		capacity += len(f.PrimaryLocation.URI)
+		capacity += len(f.PrimaryLocation.SnippetDigest)
+		capacity += len(annotationValue(f, "sast.source"))
+		capacity += len(annotationValue(f, "sast.sink"))
+		capacity += len(annotationValue(f, "sast.function"))
+	case KindSCA:
+		capacity += len(vulnerabilityID(f))
+		capacity += len(packageURL(f))
+		capacity += len(f.PackageName())
+		capacity += len(f.PackageVersion())
+		capacity += len(f.FixedVersion())
+	default:
+		capacity += len(f.Rule.ID)
+		capacity += len(vulnerabilityID(f))
+		capacity += len(f.PrimaryLocation.URI)
+		capacity += len(f.Artifact.Name)
+		capacity += len(f.CloudResourceID())
+		capacity += len(f.SecretFingerprint())
+		capacity += len(imageDigest(f))
+		capacity += len(packageURL(f))
+		capacity += len(f.PrimaryLocation.SnippetDigest)
 	}
+
+	return capacity
 }
 
-func appendLowerTrimmedPath(buffer *[]byte, value string) {
-	start, end := trimBounds(value)
-	if start == end {
-		return
+func isIdentitySpace(ch byte) bool {
+	switch ch {
+	case ' ', '\n', '\r', '\t':
+		return true
+	default:
+		return false
 	}
-
-	normalized := filepath.ToSlash(value[start:end])
-	for i := 0; i < len(normalized); i++ {
-		ch := normalized[i]
-		if ch >= 'A' && ch <= 'Z' {
-			ch += 'a' - 'A'
-		}
-		*buffer = append(*buffer, ch)
-	}
-}
-
-func trimBounds(value string) (int, int) {
-	start := 0
-	end := len(value)
-
-	for start < end {
-		switch value[start] {
-		case ' ', '\n', '\r', '\t':
-			start++
-		default:
-			goto trimEnd
-		}
-	}
-
-trimEnd:
-	for end > start {
-		switch value[end-1] {
-		case ' ', '\n', '\r', '\t':
-			end--
-		default:
-			return start, end
-		}
-	}
-
-	return start, end
-}
-
-func normalizePath(value string) string {
-	if value == "" {
-		return ""
-	}
-
-	trimmed := filepath.ToSlash(strings.TrimSpace(value))
-	return strings.ToLower(trimmed)
-}
-
-func normalizeValue(value string) string {
-	return strings.ToLower(strings.TrimSpace(value))
-}
-
-func normalizeLine(line int) string {
-	if line <= 0 {
-		return ""
-	}
-
-	return strconv.Itoa(line)
 }
 
 func annotationValue(f Finding, key string) string {

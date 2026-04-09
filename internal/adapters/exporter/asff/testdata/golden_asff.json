@@ -1,7 +1,7 @@
 [
   {
     "SchemaVersion": "2018-10-08",
-    "Id": "urn:secfacts:finding:fp-sca",
+    "Id": "urn:secfacts:finding:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
     "ProductName": "secfacts",
     "AwsAccountId": "123456789012",
@@ -45,16 +45,16 @@
       ]
     },
     "ProductFields": {
-      "secfacts/dedup_key": "dedup-sca",
-      "secfacts/fingerprint_v1": "fp-sca",
+      "secfacts/dedup_key": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "secfacts/fingerprint_v1": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "secfacts/kind": "sca",
-      "secfacts/natural_key": "natural-sca",
+      "secfacts/natural_key": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
       "secfacts/provider": ""
     }
   },
   {
     "SchemaVersion": "2018-10-08",
-    "Id": "urn:secfacts:finding:fp-sast",
+    "Id": "urn:secfacts:finding:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "ProductArn": "arn:aws:securityhub:us-east-1:123456789012:product/123456789012/default",
     "ProductName": "secfacts",
     "AwsAccountId": "123456789012",
@@ -97,10 +97,10 @@
       ]
     },
     "ProductFields": {
-      "secfacts/dedup_key": "dedup-sast",
-      "secfacts/fingerprint_v1": "fp-sast",
+      "secfacts/dedup_key": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "secfacts/fingerprint_v1": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
       "secfacts/kind": "sast",
-      "secfacts/natural_key": "natural-sast",
+      "secfacts/natural_key": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       "secfacts/provider": ""
     }
   }

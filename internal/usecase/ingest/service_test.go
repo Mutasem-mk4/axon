@@ -1,15 +1,17 @@
 package ingest
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
-	"os"
 	"path/filepath"
+	"runtime"
+	"runtime/debug"
 	"strconv"
+	"sync"
 	"testing"
 
-	"github.com/secfacts/secfacts/internal/adapters/parser/iemjson"
 	"github.com/secfacts/secfacts/internal/domain/correlation"
 	"github.com/secfacts/secfacts/internal/domain/dedup"
 	"github.com/secfacts/secfacts/internal/domain/evidence"
@@ -20,42 +22,62 @@ import (
 func BenchmarkServiceRun(b *testing.B) {
 	for _, size := range []int{1000, 10000, 100000} {
 		b.Run(strconv.Itoa(size), func(b *testing.B) {
-			path := benchmarkDatasetPath(b, size)
-			service := benchmarkService()
-
-			b.ReportAllocs()
-			b.ResetTimer()
-
-			for i := 0; i < b.N; i++ {
-				_, err := service.Run(context.Background(), Request{
-					Inputs: []Input{{
-						Path: path,
-						Source: evidence.SourceDescriptor{
-							Provider:    "benchmark",
-							ToolName:    "benchmark",
-							ToolVersion: "1.0.0",
-						},
-					}},
-					Output: ports.ExportRequest{
-						Writer: io.Discard,
-					},
-				})
-				if err != nil {
-					b.Fatalf("Run returned error: %v", err)
-				}
-			}
+			benchmarkServiceRun(b, size)
 		})
 	}
 }
 
-func benchmarkService() Service {
+func BenchmarkServiceRunStable100000(b *testing.B) {
+	benchmarkServiceRun(b, 100000)
+}
+
+func benchmarkServiceRun(b *testing.B, size int) {
+	b.Helper()
+
+	dataset := benchmarkDataset(size)
+	service := benchmarkServiceWithParser(benchmarkParser{
+		dataset: dataset,
+	})
+
+	// Keep the timed region focused on the pipeline itself rather than heap carry-over.
+	runtime.GC()
+	debug.FreeOSMemory()
+
+	b.ReportAllocs()
+	b.SetBytes(int64(len(dataset)))
+	b.ResetTimer()
+
+	path := benchmarkInputPath(b)
+	for i := 0; i < b.N; i++ {
+		_, err := service.Run(context.Background(), Request{
+			Inputs: []Input{{
+				Path: path,
+				Source: evidence.SourceDescriptor{
+					Provider:    "benchmark",
+					ToolName:    "benchmark",
+					ToolVersion: "1.0.0",
+				},
+			}},
+			Output: ports.ExportRequest{
+				Writer: io.Discard,
+			},
+		})
+		if err != nil {
+			b.Fatalf("Run returned error: %v", err)
+		}
+	}
+}
+
+func benchmarkServiceWithParser(parser ports.Parser) Service {
 	identityBuilder := evidence.DefaultIdentityBuilder{}
+	interner := evidence.NewInterner()
 
 	return Service{
-		Parsers: []ports.Parser{
-			iemjson.Parser{},
+		Parsers: []ports.Parser{parser},
+		Normalizer: normalize.Service{
+			IdentityBuilder: identityBuilder,
+			Interner:        interner,
 		},
-		Normalizer:   normalize.Service{IdentityBuilder: identityBuilder},
 		Deduplicator: dedup.Service{Builder: identityBuilder},
 		Correlator:   correlation.Service{},
 		Config: Config{
@@ -68,30 +90,75 @@ func benchmarkService() Service {
 	}
 }
 
-func benchmarkDatasetPath(tb testing.TB, size int) string {
-	tb.Helper()
+type benchmarkParser struct {
+	dataset []byte
+}
 
-	dir := tb.TempDir()
-	path := filepath.Join(dir, "findings.json")
-	file, err := os.Create(path)
+func (benchmarkParser) Provider() string {
+	return "benchmark"
+}
+
+func (benchmarkParser) Supports(filename string) bool {
+	return filename != ""
+}
+
+func (p benchmarkParser) Parse(ctx context.Context, req ports.ParseRequest, sink ports.FindingSink) error {
+	decoder := json.NewDecoder(bytes.NewReader(p.dataset))
+
+	token, err := decoder.Token()
 	if err != nil {
-		tb.Fatalf("Create returned error: %v", err)
-	}
-	defer file.Close()
-
-	encoder := json.NewEncoder(file)
-	if _, err := file.WriteString("["); err != nil {
-		tb.Fatalf("WriteString returned error: %v", err)
+		return err
 	}
 
-	for i := 0; i < size; i++ {
-		if i > 0 {
-			if _, err := file.WriteString(","); err != nil {
-				tb.Fatalf("WriteString returned error: %v", err)
-			}
+	delim, ok := token.(json.Delim)
+	if !ok || delim != '[' {
+		return io.ErrUnexpectedEOF
+	}
+
+	for decoder.More() {
+		if err := ctx.Err(); err != nil {
+			return err
 		}
 
-		finding := evidence.Finding{
+		var finding evidence.Finding
+		if err := decoder.Decode(&finding); err != nil {
+			return err
+		}
+
+		finding.SchemaVersion = evidence.SchemaVersion
+		finding.Source.Provider = req.Source.Provider
+		finding.Source.Scanner = req.Source.ToolName
+		finding.Source.ScannerVersion = req.Source.ToolVersion
+
+		if err := sink.WriteFinding(ctx, finding); err != nil {
+			return err
+		}
+	}
+
+	_, err = decoder.Token()
+	return err
+}
+
+var (
+	benchmarkDatasetOnce sync.Map
+	benchmarkDatasetMu   sync.Mutex
+)
+
+func benchmarkDataset(size int) []byte {
+	if dataset, ok := benchmarkDatasetOnce.Load(size); ok {
+		return dataset.([]byte)
+	}
+
+	benchmarkDatasetMu.Lock()
+	defer benchmarkDatasetMu.Unlock()
+
+	if dataset, ok := benchmarkDatasetOnce.Load(size); ok {
+		return dataset.([]byte)
+	}
+
+	findings := make([]evidence.Finding, 0, size)
+	for i := 0; i < size; i++ {
+		findings = append(findings, evidence.Finding{
 			Kind:  evidence.KindSCA,
 			Title: "benchmark finding " + strconv.Itoa(i),
 			Severity: evidence.Severity{
@@ -110,20 +177,25 @@ func benchmarkDatasetPath(tb testing.TB, size int) string {
 				ID:        "CVE-2024-" + strconv.Itoa(i),
 				CVSSScore: 7.5,
 			},
-		}
-
-		if err := encoder.Encode(finding); err != nil {
-			tb.Fatalf("Encode returned error: %v", err)
-		}
-
-		if _, err := file.Seek(-1, io.SeekCurrent); err != nil {
-			tb.Fatalf("Seek returned error: %v", err)
-		}
+		})
 	}
 
-	if _, err := file.WriteString("]"); err != nil {
-		tb.Fatalf("WriteString returned error: %v", err)
+	dataset, err := json.Marshal(findings)
+	if err != nil {
+		panic(err)
 	}
 
-	return path
+	benchmarkDatasetOnce.Store(size, dataset)
+	return dataset
+}
+
+func benchmarkInputPath(tb testing.TB) string {
+	tb.Helper()
+
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		tb.Fatal("runtime.Caller returned no file information")
+	}
+
+	return filepath.Clean(file)
 }

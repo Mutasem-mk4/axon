@@ -200,9 +200,9 @@ func mapFinding(cfg config, document evidence.Document, item evidence.Finding) f
 			Types:    types,
 		},
 		ProductFields: map[string]string{
-			"secfacts/fingerprint_v1": item.Identity.FingerprintV1,
-			"secfacts/dedup_key":      item.Identity.DedupKey,
-			"secfacts/natural_key":    item.Identity.NaturalKey,
+			"secfacts/fingerprint_v1": item.Identity.FingerprintV1.String(),
+			"secfacts/dedup_key":      item.Identity.DedupKey.String(),
+			"secfacts/natural_key":    item.Identity.NaturalKey.String(),
 			"secfacts/kind":           string(item.Kind),
 			"secfacts/provider":       item.Source.Provider,
 		},
@@ -246,8 +246,8 @@ func asffSeverityLabel(label evidence.SeverityLabel) string {
 
 func findingID(item evidence.Finding) string {
 	switch {
-	case strings.TrimSpace(item.Identity.FingerprintV1) != "":
-		return "urn:secfacts:finding:" + item.Identity.FingerprintV1
+	case !item.Identity.FingerprintV1.IsZero():
+		return "urn:secfacts:finding:" + item.Identity.FingerprintV1.String()
 	case strings.TrimSpace(item.ID) != "":
 		return "urn:secfacts:finding:" + strings.ToLower(strings.TrimSpace(item.ID))
 	default:
@@ -291,7 +291,7 @@ func mapResources(cfg config, item evidence.Finding) []resource {
 	if len(resources) == 0 {
 		resources = append(resources, resource{
 			Type:   "Other",
-			Id:     firstNonEmpty(item.PrimaryLocation.URI, item.ID, item.Identity.FingerprintV1, "secfacts:finding"),
+			Id:     firstNonEmpty(item.PrimaryLocation.URI, item.ID, item.Identity.FingerprintV1.String(), "secfacts:finding"),
 			Region: cfg.awsRegion,
 		})
 	}

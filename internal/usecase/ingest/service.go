@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/secfacts/secfacts/internal/domain/correlation"
 	sferr "github.com/secfacts/secfacts/internal/domain/errors"
 	"github.com/secfacts/secfacts/internal/domain/evidence"
 	"github.com/secfacts/secfacts/internal/ports"
@@ -54,6 +55,10 @@ type discoveredFile struct {
 
 type findingEnvelope struct {
 	finding evidence.Finding
+}
+
+type compactCorrelator interface {
+	CorrelateCompact(ctx context.Context, findings []evidence.Finding, compact []correlation.CompactFinding) ([]evidence.RootCauseCluster, error)
 }
 
 var envelopePool = sync.Pool{
@@ -112,7 +117,12 @@ func (s Service) Run(ctx context.Context, req Request) (evidence.Document, error
 		return s.runDeduplicate(groupCtx, normalizedCh, uniqueCh, &totalFindings)
 	})
 
-	findings := make([]evidence.Finding, 0, len(req.Inputs))
+	estimatedFindings := cfg.FindingBuffer
+	if estimatedFindings < len(req.Inputs) {
+		estimatedFindings = len(req.Inputs)
+	}
+	findings := make([]evidence.Finding, 0, estimatedFindings)
+	compactFindings := make([]correlation.CompactFinding, 0, estimatedFindings)
 	group.Go(func() error {
 		normalizeWG.Wait()
 		defer close(normalizedCh)
@@ -129,7 +139,9 @@ func (s Service) Run(ctx context.Context, req Request) (evidence.Document, error
 					return nil
 				}
 
+				index := len(findings)
 				findings = append(findings, finding)
+				compactFindings = append(compactFindings, correlation.Compact(finding, index))
 			}
 		}
 	})
@@ -144,7 +156,7 @@ func (s Service) Run(ctx context.Context, req Request) (evidence.Document, error
 		s.Observer.OnFindingsDeduplicated(ctx, int(totalFindings.Load()), len(findings))
 	}
 
-	correlations, err := s.Correlator.Correlate(ctx, findings)
+	correlations, err := s.correlate(ctx, findings, compactFindings)
 	if err != nil {
 		return evidence.Document{}, sferr.Wrap(sferr.CodeCorrelateFailed, opRun, err, "correlate findings")
 	}
@@ -349,7 +361,7 @@ func (s Service) runDeduplicate(ctx context.Context, in <-chan *findingEnvelope,
 	if initialCapacity <= 0 {
 		initialCapacity = 512
 	}
-	seen := make(map[[32]byte]struct{}, initialCapacity)
+	seen := make(map[evidence.Hash]struct{}, initialCapacity)
 
 	for {
 		select {
@@ -362,10 +374,10 @@ func (s Service) runDeduplicate(ctx context.Context, in <-chan *findingEnvelope,
 
 			finding := envelope.finding
 			totalFindings.Add(1)
-			key, ok := evidence.ParseSHA256Hex(finding.Identity.DedupKey)
-			if !ok {
+			key := finding.Identity.DedupKey
+			if key.IsZero() {
 				releaseEnvelope(envelope)
-				return sferr.New(sferr.CodeDedupFailed, opRun, "invalid dedup key encoding")
+				return sferr.New(sferr.CodeDedupFailed, opRun, "missing dedup key")
 			}
 			if _, exists := seen[key]; exists {
 				releaseEnvelope(envelope)
@@ -460,6 +472,14 @@ func primarySource(inputs []Input) evidence.SourceDescriptor {
 	}
 
 	return inputs[0].Source
+}
+
+func (s Service) correlate(ctx context.Context, findings []evidence.Finding, compact []correlation.CompactFinding) ([]evidence.RootCauseCluster, error) {
+	if compactCapable, ok := s.Correlator.(compactCorrelator); ok {
+		return compactCapable.CorrelateCompact(ctx, findings, compact)
+	}
+
+	return s.Correlator.Correlate(ctx, findings)
 }
 
 type parserSinkFunc func(ctx context.Context, finding evidence.Finding) error

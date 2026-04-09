@@ -175,9 +175,9 @@ type SourceRecord struct {
 }
 
 type Identity struct {
-	DedupKey      string
-	NaturalKey    string
-	FingerprintV1 string
+	DedupKey      Hash
+	NaturalKey    Hash
+	FingerprintV1 Hash
 }
 
 type RootCauseHint struct {

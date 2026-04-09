@@ -2,7 +2,6 @@ package correlation
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	"github.com/secfacts/secfacts/internal/domain/evidence"
@@ -13,40 +12,65 @@ const opCorrelate = "correlation.Service.Correlate"
 type Service struct{}
 
 func (Service) Correlate(_ context.Context, findings []evidence.Finding) ([]evidence.RootCauseCluster, error) {
-	clusters := make(map[string]*evidence.RootCauseCluster)
+	if len(findings) == 0 {
+		return nil, nil
+	}
 
-	for _, finding := range findings {
-		clusterKey, clusterType, title := correlationKey(finding)
-		if clusterKey == "" {
+	compact := make([]CompactFinding, 0, len(findings))
+	for index, finding := range findings {
+		compact = append(compact, Compact(finding, index))
+	}
+
+	return correlateCompact(findings, compact), nil
+}
+
+func (Service) CorrelateCompact(_ context.Context, findings []evidence.Finding, compact []CompactFinding) ([]evidence.RootCauseCluster, error) {
+	return correlateCompact(findings, compact), nil
+}
+
+func correlateCompact(findings []evidence.Finding, compact []CompactFinding) []evidence.RootCauseCluster {
+	if len(compact) == 0 {
+		return nil
+	}
+
+	initialCapacity := len(compact)/4 + 1
+	clusterIndex := make(map[string]int, initialCapacity)
+	clusters := make([]evidence.RootCauseCluster, 0, initialCapacity)
+
+	for _, item := range compact {
+		if item.CorrelationKey == "" {
 			continue
 		}
 
-		id := fmt.Sprintf("%s|%s", clusterType, clusterKey)
-		cluster, exists := clusters[id]
+		id := item.CorrelationType + "|" + item.CorrelationKey
+		index, exists := clusterIndex[id]
 		if !exists {
-			cluster = &evidence.RootCauseCluster{
-				ID:    id,
-				Key:   clusterKey,
-				Type:  clusterType,
-				Title: title,
-			}
-			clusters[id] = cluster
+			index = len(clusters)
+			clusterIndex[id] = index
+			clusters = append(clusters, evidence.RootCauseCluster{
+				ID:         id,
+				Key:        item.CorrelationKey,
+				Type:       item.CorrelationType,
+				Title:      item.CorrelationTitle,
+				FindingIDs: make([]string, 0, 4),
+			})
 		}
 
-		cluster.FindingIDs = append(cluster.FindingIDs, finding.ID)
-		if shouldReplaceRepresentative(cluster.Representative, finding) {
-			cluster.Representative = finding
+		cluster := &clusters[index]
+		cluster.FindingIDs = append(cluster.FindingIDs, item.ID)
+		if shouldReplaceRepresentativeScore(cluster.Representative.Severity.Score, item.SeverityScore) {
+			cluster.Representative = findings[item.FindingIndex]
 		}
 	}
 
-	result := make([]evidence.RootCauseCluster, 0, len(clusters))
+	result := clusters[:0]
 	for _, cluster := range clusters {
 		if len(cluster.FindingIDs) < 2 {
 			continue
 		}
 
 		sort.Strings(cluster.FindingIDs)
-		result = append(result, *cluster)
+		result = append(result, cluster)
 	}
 
 	sort.Slice(result, func(i int, j int) bool {
@@ -57,7 +81,7 @@ func (Service) Correlate(_ context.Context, findings []evidence.Finding) ([]evid
 		return result[i].Key < result[j].Key
 	})
 
-	return result, nil
+	return result
 }
 
 func correlationKey(f evidence.Finding) (string, string, string) {
@@ -102,10 +126,6 @@ func correlationKey(f evidence.Finding) (string, string, string) {
 	return "", "", ""
 }
 
-func shouldReplaceRepresentative(current evidence.Finding, candidate evidence.Finding) bool {
-	if current.ID == "" {
-		return true
-	}
-
-	return candidate.Severity.Score > current.Severity.Score
+func shouldReplaceRepresentativeScore(current float64, candidate float64) bool {
+	return candidate > current || current == 0
 }
