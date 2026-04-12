@@ -493,7 +493,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
 	}
 
-	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)
+	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
 	_, _ = fmt.Fprintln(out, "")
 	_, _ = fmt.Fprintln(out, "Summary")
 	_, _ = fmt.Fprintf(tw, "Severity\tTotal\tSCA\tSAST\tDAST\tCloud\tSecrets\n")
@@ -511,8 +511,6 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		severityText := strings.ToUpper(string(label))
 		if isTerminal {
 			severityText = colorizeSeverity(label, severityText)
-		} else {
-			severityText = addSeverityEmoji(label, severityText)
 		}
 
 		_, _ = fmt.Fprintf(
@@ -547,44 +545,24 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 
 func colorizeSeverity(label evidence.SeverityLabel, text string) string {
 	const (
-		escape    = "\xff"
-		reset     = escape + "\x1b[0m" + escape
-		bold      = escape + "\x1b[1m" + escape
-		red       = escape + "\x1b[31m" + escape
-		yellow    = escape + "\x1b[33m" + escape
-		cyan      = escape + "\x1b[36m" + escape
-		blue      = escape + "\x1b[34m" + escape
-		boldRed   = escape + "\x1b[1m\x1b[31m" + escape
+		reset     = "\x1b[0m"
+		bold      = "\x1b[1m"
+		red       = "\x1b[31m"
+		yellow    = "\x1b[33m"
+		cyan      = "\x1b[36m"
+		blue      = "\x1b[34m"
+		boldRed   = bold + red
 	)
-
-	textWithEmoji := addSeverityEmoji(label, text)
 
 	switch label {
 	case evidence.SeverityCritical, evidence.SeverityHigh:
-		return boldRed + textWithEmoji + reset
+		return boldRed + text + reset
 	case evidence.SeverityMedium:
-		return yellow + textWithEmoji + reset
+		return yellow + text + reset
 	case evidence.SeverityLow:
-		return cyan + textWithEmoji + reset
+		return cyan + text + reset
 	case evidence.SeverityInfo:
-		return blue + textWithEmoji + reset
-	default:
-		return textWithEmoji
-	}
-}
-
-func addSeverityEmoji(label evidence.SeverityLabel, text string) string {
-	switch label {
-	case evidence.SeverityCritical:
-		return "🚨 " + text
-	case evidence.SeverityHigh:
-		return "🔴 " + text
-	case evidence.SeverityMedium:
-		return "🟡 " + text
-	case evidence.SeverityLow:
-		return "🔵 " + text
-	case evidence.SeverityInfo:
-		return "⚪ " + text
+		return blue + text + reset
 	default:
 		return text
 	}
