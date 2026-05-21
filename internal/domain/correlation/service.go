@@ -7,7 +7,7 @@ import (
 	"github.com/axon/axon/internal/domain/evidence"
 )
 
-const opCorrelate = "correlation.Service.Correlate"
+
 
 type Service struct{}
 
