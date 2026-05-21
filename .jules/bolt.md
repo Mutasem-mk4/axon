@@ -1,0 +1,3 @@
+## 2024-05-20 - Index-Based Pointer Semantics for Large Structs Iteration
+**Learning:** `evidence.Finding` is a large struct, which creates significant CPU and memory overhead when copied during slice iteration using value semantics (e.g., `for _, finding := range findings { ... }`) or when stored directly inside lookup maps like `map[Key]evidence.Finding`.
+**Action:** Use index-based pointer semantics (`for i := range findings { finding := &findings[i] ... }`) and store struct indices inside maps instead (`map[Key]int`) to prevent unnecessary memory allocations and struct copies.
