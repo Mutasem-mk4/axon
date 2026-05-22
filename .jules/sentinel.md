@@ -1,0 +1,4 @@
+## 2024-05-22 - [Insecure File Permissions via os.Create]
+**Vulnerability:** The application was creating security report output files using `os.Create()`, which uses default permissions (0666 before umask). This meant security reports might be world-readable depending on the user's environment.
+**Learning:** `os.Create` is often a bad default for applications dealing with sensitive data (like security scan results), as it grants too broad read access.
+**Prevention:** Use `os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)` to ensure files are created with explicit, restrictive permissions (read/write only for the owner).
