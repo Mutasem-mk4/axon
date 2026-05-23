@@ -1,0 +1,3 @@
+## 2024-06-25 - Fixing ANSI color alignment with text/tabwriter
+**Learning:** When using ANSI color escape sequences inside text to be processed by Go's `text/tabwriter`, the tabwriter counts the invisible escape sequences as visible characters, causing columns to misalign. Wrapping *only* the escape sequences themselves with `\xff` bytes (e.g. `\xff\x1b[31m\xff`) and passing `tabwriter.StripEscape` prevents this alignment issue.
+**Action:** When adding ANSI colors to table or formatted CLI terminal output powered by `tabwriter`, always use `\xff` to wrap the specific ANSI sequences and enable the `StripEscape` flag.
