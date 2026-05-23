@@ -1,0 +1,4 @@
+## 2024-05-23 - [Insecure File Creation]
+**Vulnerability:** Use of `os.Create` to create files sets default permissions to 0666, which is overly permissive and allows other users on the system to read and modify output files that could contain sensitive data.
+**Learning:** Security reports, logs, or general output files should be protected from unauthorized access on shared systems to prevent potential leakage of sensitive data or tampering.
+**Prevention:** Always use `os.OpenFile` with explicit restricted permissions such as 0600 (`os.O_CREATE|os.O_WRONLY|os.O_TRUNC`) for sensitive output files.
