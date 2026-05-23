@@ -61,7 +61,9 @@ type Violation struct {
 type Service struct{}
 
 func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) BaselineDiff {
+	// Optimization: Store integer indices instead of copying large evidence.Finding structs into the map
 	seenBaseline := make(map[evidence.Hash]int, len(baseline))
+	// Optimization: Use index-based loop instead of value semantics to prevent copying the large struct on each iteration
 	for i := range baseline {
 		if baseline[i].Identity.FingerprintV1.IsZero() {
 			continue
@@ -76,6 +78,7 @@ func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) 
 	}
 
 	seenCurrent := make(map[evidence.Hash]struct{}, len(current))
+	// Optimization: Iterate via index and use pointer to avoid large struct copies
 	for i := range current {
 		finding := &current[i]
 		fingerprint := finding.Identity.FingerprintV1
