@@ -1,0 +1,3 @@
+## 2024-05-23 - Index-Based Iteration for Large Struct Slices
+**Learning:** In Go, iterating over slices of large structs (like `evidence.Finding`, which is very large due to its many fields) using value semantics (`for _, finding := range findings`) causes significant memory allocation and CPU overhead because the entire struct is copied on each iteration. Storing these large structs in maps (`map[Hash]evidence.Finding`) further exacerbates the issue by duplicating the memory.
+**Action:** Use index-based pointer semantics (`for i := range findings { finding := &findings[i] }`) and store indices instead of values in maps (`map[Hash]int`) when processing collections of large structs. This drastically reduces allocations and improves performance.
