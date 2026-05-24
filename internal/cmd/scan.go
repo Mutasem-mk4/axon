@@ -56,8 +56,9 @@ var scanCmd = &cobra.Command{
 		defer in.Close()
 
 		var out io.Writer = os.Stdout
+		// SECURE: Enforce 0600 permissions (read/write for owner only) to prevent unauthorized access to sensitive report data.
 		if outputFile != "" {
-			f, err := os.Create(outputFile)
+			f, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 			if err != nil {
 				return fmt.Errorf("failed to create output file: %w", err)
 			}
