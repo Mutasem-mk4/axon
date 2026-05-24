@@ -342,6 +342,7 @@ func outputWriter(path string) (*os.File, func(), error) {
 	if path == "" {
 		return os.Stdout, func() {}, nil
 	}
+	// SECURE: Enforce 0600 permissions (read/write for owner only) to prevent unauthorized access to sensitive report data.
 
 	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
