@@ -1,0 +1,4 @@
+## 2025-02-23 - Enforce strict permissions and sanitize output file paths
+**Vulnerability:** Output file creation logic in `internal/app/app.go` and `internal/cmd/scan.go` utilizes `os.Create`, which allows files to be created with overly permissive default permissions (0666) or allows directory traversal via unsanitized paths.
+**Learning:** `os.Create(path)` opens a file with mode `0666` and truncates it. When creating sensitive output files like security reports, we must ensure restrictive permissions (`0600`) and also ensure we prevent path traversal vulnerabilities by cleaning paths and ensuring paths are safe before opening them.
+**Prevention:** Instead of `os.Create`, use `os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)` to strictly enforce secure file creation permissions. Always clean file paths using `filepath.Clean(path)` to prevent potential directory traversal.
