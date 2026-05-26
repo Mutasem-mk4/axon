@@ -1,0 +1,3 @@
+## 2026-05-26 - [CLI Table Alignment with ANSI Codes]
+**Learning:** Using ANSI escape codes for coloring terminal output breaks Go's `text/tabwriter` column alignment because the invisible escape sequences are counted towards the column width.
+**Action:** When printing colored tables to the terminal with `text/tabwriter`, unconditionally initialize the writer with `tabwriter.StripEscape` flag (e.g. `tabwriter.NewWriter(out, 0, 0, 2, ' ', tabwriter.StripEscape)`). Wrap the ANSI escape sequences in `\xff` characters (e.g., `\xff\x1b[31m\xff`) so `tabwriter` strips them before calculating column widths while preserving them in the final output.
