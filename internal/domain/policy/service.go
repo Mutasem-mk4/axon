@@ -61,12 +61,12 @@ type Violation struct {
 type Service struct{}
 
 func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) BaselineDiff {
-	seenBaseline := make(map[evidence.Hash]int, len(baseline))
-	for i := range baseline {
-		if baseline[i].Identity.FingerprintV1.IsZero() {
+	seenBaseline := make(map[evidence.Hash]evidence.Finding, len(baseline))
+	for _, finding := range baseline {
+		if finding.Identity.FingerprintV1.IsZero() {
 			continue
 		}
-		seenBaseline[baseline[i].Identity.FingerprintV1] = i
+		seenBaseline[finding.Identity.FingerprintV1] = finding
 	}
 
 	diff := BaselineDiff{
@@ -76,31 +76,27 @@ func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) 
 	}
 
 	seenCurrent := make(map[evidence.Hash]struct{}, len(current))
-	for i := range current {
-		fingerprint := current[i].Identity.FingerprintV1
+	for _, finding := range current {
+		fingerprint := finding.Identity.FingerprintV1
 		if fingerprint.IsZero() {
-			diff.New = append(diff.New, current[i])
+			diff.New = append(diff.New, finding)
 			continue
 		}
 
 		seenCurrent[fingerprint] = struct{}{}
 		if _, exists := seenBaseline[fingerprint]; exists {
-			diff.Existing = append(diff.Existing, current[i])
+			diff.Existing = append(diff.Existing, finding)
 			continue
 		}
 
-		diff.New = append(diff.New, current[i])
+		diff.New = append(diff.New, finding)
 	}
 
-	for i := range baseline {
-		fingerprint := baseline[i].Identity.FingerprintV1
-		if fingerprint.IsZero() {
-			continue
-		}
+	for fingerprint, finding := range seenBaseline {
 		if _, exists := seenCurrent[fingerprint]; exists {
 			continue
 		}
-		diff.Fixed = append(diff.Fixed, baseline[i])
+		diff.Fixed = append(diff.Fixed, finding)
 	}
 
 	return diff
@@ -117,18 +113,18 @@ func (Service) Evaluate(_ context.Context, findings []evidence.Finding, diff Bas
 	}
 
 	filtered := make([]evidence.Finding, 0, len(evaluated))
-	for i := range evaluated {
-		if isAllowlisted(policy.Allowlist, evaluated[i]) {
+	for _, finding := range evaluated {
+		if isAllowlisted(policy.Allowlist, finding) {
 			continue
 		}
-		filtered = append(filtered, evaluated[i])
+		filtered = append(filtered, finding)
 	}
 
 	violations := make([]Violation, 0)
 	if threshold := normalizeSeverityLabel(policy.FailOnSeverity); threshold != "" {
 		count := 0
-		for i := range filtered {
-			if meetsSeverityThreshold(filtered[i].Severity.Label, threshold) {
+		for _, finding := range filtered {
+			if meetsSeverityThreshold(finding.Severity.Label, threshold) {
 				count++
 			}
 		}
