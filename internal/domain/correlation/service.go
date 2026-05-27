@@ -41,7 +41,9 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 	clusterIndex := make(map[string]int, initialCapacity)
 	clusters := make([]evidence.RootCauseCluster, 0, initialCapacity)
 
-	for _, item := range compact {
+	// ⚡ Bolt Optimization: Use index-based iteration and pointers to prevent copying large CompactFinding structs by value.
+	for i := range compact {
+		item := &compact[i]
 		if item.CorrelationKey == "" {
 			continue
 		}
@@ -51,18 +53,20 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 		if !exists {
 			index = len(clusters)
 			clusterIndex[id] = index
+
+			// ⚡ Bolt Optimization: Assign Representative at cluster creation rather than redundantly on every loop iteration to eliminate O(N) map lookups.
 			clusters = append(clusters, evidence.RootCauseCluster{
-				ID:         id,
-				Key:        item.CorrelationKey,
-				Type:       item.CorrelationType,
-				Title:      item.CorrelationTitle,
-				FindingIDs: make([]string, 0, 4),
+				ID:             id,
+				Key:            item.CorrelationKey,
+				Type:           item.CorrelationType,
+				Title:          item.CorrelationTitle,
+				FindingIDs:     make([]string, 0, 4),
+				Representative: representatives[id],
 			})
 		}
 
 		cluster := &clusters[index]
 		cluster.FindingIDs = append(cluster.FindingIDs, item.ID)
-		cluster.Representative = representatives[id]
 	}
 
 	result := clusters[:0]
