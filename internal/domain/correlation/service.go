@@ -41,7 +41,8 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 	clusterIndex := make(map[string]int, initialCapacity)
 	clusters := make([]evidence.RootCauseCluster, 0, initialCapacity)
 
-	for _, item := range compact {
+	for i := range compact {
+		item := &compact[i]
 		if item.CorrelationKey == "" {
 			continue
 		}
@@ -52,17 +53,17 @@ func correlateCompact(compact []CompactFinding, representatives map[string]evide
 			index = len(clusters)
 			clusterIndex[id] = index
 			clusters = append(clusters, evidence.RootCauseCluster{
-				ID:         id,
-				Key:        item.CorrelationKey,
-				Type:       item.CorrelationType,
-				Title:      item.CorrelationTitle,
-				FindingIDs: make([]string, 0, 4),
+				ID:             id,
+				Key:            item.CorrelationKey,
+				Type:           item.CorrelationType,
+				Title:          item.CorrelationTitle,
+				FindingIDs:     make([]string, 0, 4),
+				Representative: representatives[id],
 			})
 		}
 
 		cluster := &clusters[index]
 		cluster.FindingIDs = append(cluster.FindingIDs, item.ID)
-		cluster.Representative = representatives[id]
 	}
 
 	result := clusters[:0]
