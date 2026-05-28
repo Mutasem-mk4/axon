@@ -1,0 +1,3 @@
+## 2024-05-18 - Fix tabwriter column alignment with ANSI colors
+**Learning:** When using Go's `tabwriter` with ANSI escape codes, you must enable the `tabwriter.StripEscape` flag during initialization and wrap *only* the exact escape sequence in `\xff` byte markers (e.g., `\xff\x1b[31m\xff`). Wrapping the entire string including visible text causes `tabwriter` to evaluate the visible text's width as 0, breaking table column padding.
+**Action:** Always enable `tabwriter.StripEscape` when using ANSI color output within tables. Wrap the ANSI escape sequences explicitly using `\xff` around the color start and color reset sequences.
