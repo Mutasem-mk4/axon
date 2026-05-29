@@ -1,0 +1,3 @@
+## 2024-05-14 - Fix tabwriter ANSI alignment
+**Learning:** When using Go's `tabwriter` with ANSI escape codes for colored terminal output, the visible text's width is evaluated as 0 if the entire string (including visible text) is wrapped in escape markers, breaking column padding. The `tabwriter.StripEscape` flag must be used during initialization, and *only* the exact escape sequence should be wrapped in `\xff` byte markers (e.g., `\xff\x1b[31m\xff`).
+**Action:** Added `tabwriter.StripEscape` flag to `tabwriter.NewWriter` and wrapped ANSI escape constants in `\xff` byte markers when printing.
