@@ -61,12 +61,12 @@ type Violation struct {
 type Service struct{}
 
 func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) BaselineDiff {
-	seenBaseline := make(map[evidence.Hash]int, len(baseline))
-	for i := range baseline {
-		if baseline[i].Identity.FingerprintV1.IsZero() {
+	seenBaseline := make(map[evidence.Hash]evidence.Finding, len(baseline))
+	for _, finding := range baseline {
+		if finding.Identity.FingerprintV1.IsZero() {
 			continue
 		}
-		seenBaseline[baseline[i].Identity.FingerprintV1] = i
+		seenBaseline[finding.Identity.FingerprintV1] = finding
 	}
 
 	diff := BaselineDiff{
@@ -76,27 +76,27 @@ func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) 
 	}
 
 	seenCurrent := make(map[evidence.Hash]struct{}, len(current))
-	for i := range current {
-		fingerprint := current[i].Identity.FingerprintV1
+	for _, finding := range current {
+		fingerprint := finding.Identity.FingerprintV1
 		if fingerprint.IsZero() {
-			diff.New = append(diff.New, current[i])
+			diff.New = append(diff.New, finding)
 			continue
 		}
 
 		seenCurrent[fingerprint] = struct{}{}
 		if _, exists := seenBaseline[fingerprint]; exists {
-			diff.Existing = append(diff.Existing, current[i])
+			diff.Existing = append(diff.Existing, finding)
 			continue
 		}
 
-		diff.New = append(diff.New, current[i])
+		diff.New = append(diff.New, finding)
 	}
 
-	for fingerprint, index := range seenBaseline {
+	for fingerprint, finding := range seenBaseline {
 		if _, exists := seenCurrent[fingerprint]; exists {
 			continue
 		}
-		diff.Fixed = append(diff.Fixed, baseline[index])
+		diff.Fixed = append(diff.Fixed, finding)
 	}
 
 	return diff
