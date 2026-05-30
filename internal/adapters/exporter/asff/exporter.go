@@ -189,9 +189,9 @@ func resolveConfig(options ports.ExportOptions, document evidence.Document) conf
 }
 
 func inferAWSAccountID(document evidence.Document) string {
-	for _, item := range document.Findings {
-		if item.Cloud != nil && strings.TrimSpace(item.Cloud.AccountID) != "" {
-			return strings.TrimSpace(item.Cloud.AccountID)
+	for i := range document.Findings {
+		if document.Findings[i].Cloud != nil && strings.TrimSpace(document.Findings[i].Cloud.AccountID) != "" {
+			return strings.TrimSpace(document.Findings[i].Cloud.AccountID)
 		}
 	}
 
