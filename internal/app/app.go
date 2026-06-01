@@ -493,10 +493,7 @@ func renderSummaryTable(out io.Writer, result ingest.Result) {
 		isTerminal = isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())
 	}
 
-	flags := uint(0)
-	if isTerminal {
-		flags = tabwriter.StripEscape
-	}
+	flags := uint(tabwriter.StripEscape)
 	tw := tabwriter.NewWriter(out, 0, 0, 2, ' ', flags)
 	_, _ = fmt.Fprintln(out, "")
 	_, _ = fmt.Fprintln(out, "Summary")
