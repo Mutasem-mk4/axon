@@ -1,6 +1,3 @@
 ## 2024-06-03 - Avoid expensive memory allocations on document.Findings
 **Learning:** In the domain models, `document.Findings` (`evidence.Document`) is a slice of values (`[]Finding`), requiring index-based pointer semantics during iteration to avoid memory overhead. Conversely, `issue.Findings` (`domain.Issue`) is a slice of pointers (`[]*Evidence`), which can safely be iterated using value semantics.
 **Action:** Use index-based iteration (e.g., `for i := range slice`) and access elements via pointers (e.g., `&slice[i]`) instead of value-based iteration (`for _, item := range slice`) when iterating over `document.Findings`.
-## 2024-06-03 - Avoid expensive memory allocations on document.Findings
-**Learning:** In the domain models, `document.Findings` (`evidence.Document`) is a slice of values (`[]Finding`), requiring index-based pointer semantics during iteration to avoid memory overhead. Conversely, `issue.Findings` (`domain.Issue`) is a slice of pointers (`[]*Evidence`), which can safely be iterated using value semantics.
-**Action:** Use index-based iteration (e.g., `for i := range slice`) and access elements via pointers (e.g., `&slice[i]`) instead of value-based iteration (`for _, item := range slice`) when iterating over `document.Findings`.
