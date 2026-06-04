@@ -122,16 +122,20 @@ func (p *Pipeline) Run(ctx context.Context, input io.Reader, output io.Writer) e
 
 func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 	const (
-		colorReset  = "\033[0m"
-		colorRed    = "\033[31m"
-		colorYellow = "\033[33m"
-		colorCyan   = "\033[36m"
-		colorBold   = "\033[1m"
+		rawReset = "\033[0m"
+		rawCyan  = "\033[36m"
+		rawBold  = "\033[1m"
+
+		esc         = "\xff"
+		colorReset  = esc + "\033[0m" + esc
+		colorRed    = esc + "\033[31m" + esc
+		colorYellow = esc + "\033[33m" + esc
+		colorCyan   = esc + "\033[36m" + esc
 	)
 
-	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", colorBold, colorCyan, colorReset)
+	fmt.Fprintf(w, "\n%s%s=== AXON SCAN SUMMARY ===%s\n", rawBold, rawCyan, rawReset)
 
-	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', tabwriter.StripEscape)
 
 	severityCounts := make(map[string]int)
 	var maxScore float32
@@ -152,12 +156,12 @@ func (p *Pipeline) printTerminalSummary(w io.Writer, issues []domain.Issue) {
 
 	if p.failScore > 0 {
 		status := "PASS"
-		color := colorCyan
+		color := rawCyan
 		if maxScore >= p.failScore {
 			status = "FAIL"
-			color = colorRed
+			color = "\033[31m"
 		}
-		fmt.Fprintf(w, "\nThreshold Status: %s%s%s (Limit: %.1f)\n", color, status, colorReset, p.failScore)
+		fmt.Fprintf(w, "\nThreshold Status: %s%s%s (Limit: %.1f)\n", color, status, rawReset, p.failScore)
 	}
 	fmt.Fprintln(w)
 }
