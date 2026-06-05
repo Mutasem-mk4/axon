@@ -47,8 +47,7 @@ func (s *Service) ApplyFix(ctx context.Context, proposal domain.RemediationPropo
 	// For safety, we use 'patch' command if available, or write a temporary file.
 	// This implementation assumes a standard Unix-like environment or 'git apply'.
 
-	// 🛡️ Sentinel: Create patch files with secure permissions (0600 is default for CreateTemp, but good to add context)
-	tmpFile, err := os.CreateTemp("", "axon-fix-*.patch") // CreateTemp already creates 0600
+	tmpFile, err := os.CreateTemp("", "axon-fix-*.patch")
 	if err != nil {
 		return fmt.Errorf("create temp patch: %w", err)
 	}
