@@ -62,11 +62,13 @@ type Service struct{}
 
 func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) BaselineDiff {
 	seenBaseline := make(map[evidence.Hash]evidence.Finding, len(baseline))
-	for _, finding := range baseline {
-		if finding.Identity.FingerprintV1.IsZero() {
+	// Use index-based iteration (for i := range) rather than value-based (for _, finding := range)
+	// to avoid implicitly copying the large (680 byte) evidence.Finding struct on every iteration.
+	for i := range baseline {
+		if baseline[i].Identity.FingerprintV1.IsZero() {
 			continue
 		}
-		seenBaseline[finding.Identity.FingerprintV1] = finding
+		seenBaseline[baseline[i].Identity.FingerprintV1] = baseline[i]
 	}
 
 	diff := BaselineDiff{
@@ -76,20 +78,21 @@ func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) 
 	}
 
 	seenCurrent := make(map[evidence.Hash]struct{}, len(current))
-	for _, finding := range current {
-		fingerprint := finding.Identity.FingerprintV1
+	// Optimize slice iteration by using index access to prevent large struct copies.
+	for i := range current {
+		fingerprint := current[i].Identity.FingerprintV1
 		if fingerprint.IsZero() {
-			diff.New = append(diff.New, finding)
+			diff.New = append(diff.New, current[i])
 			continue
 		}
 
 		seenCurrent[fingerprint] = struct{}{}
 		if _, exists := seenBaseline[fingerprint]; exists {
-			diff.Existing = append(diff.Existing, finding)
+			diff.Existing = append(diff.Existing, current[i])
 			continue
 		}
 
-		diff.New = append(diff.New, finding)
+		diff.New = append(diff.New, current[i])
 	}
 
 	for fingerprint, finding := range seenBaseline {
@@ -113,18 +116,20 @@ func (Service) Evaluate(_ context.Context, findings []evidence.Finding, diff Bas
 	}
 
 	filtered := make([]evidence.Finding, 0, len(evaluated))
-	for _, finding := range evaluated {
-		if isAllowlisted(policy.Allowlist, finding) {
+	// Optimize slice iteration by using index access to prevent large struct copies.
+	for i := range evaluated {
+		if isAllowlisted(policy.Allowlist, evaluated[i]) {
 			continue
 		}
-		filtered = append(filtered, finding)
+		filtered = append(filtered, evaluated[i])
 	}
 
 	violations := make([]Violation, 0)
 	if threshold := normalizeSeverityLabel(policy.FailOnSeverity); threshold != "" {
 		count := 0
-		for _, finding := range filtered {
-			if meetsSeverityThreshold(finding.Severity.Label, threshold) {
+		// Optimize slice iteration by using index access to prevent large struct copies.
+		for i := range filtered {
+			if meetsSeverityThreshold(filtered[i].Severity.Label, threshold) {
 				count++
 			}
 		}
@@ -195,8 +200,9 @@ func isAllowlisted(entries []AllowlistEntry, finding evidence.Finding) bool {
 
 func countBySeverity(findings []evidence.Finding) map[evidence.SeverityLabel]int {
 	counts := make(map[evidence.SeverityLabel]int, 5)
-	for _, finding := range findings {
-		counts[normalizeSeverityLabel(finding.Severity.Label)]++
+	// Optimize slice iteration by using index access to prevent large struct copies.
+	for i := range findings {
+		counts[normalizeSeverityLabel(findings[i].Severity.Label)]++
 	}
 
 	return counts
