@@ -62,6 +62,8 @@ type Service struct{}
 
 func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) BaselineDiff {
 	seenBaseline := make(map[evidence.Hash]evidence.Finding, len(baseline))
+	// Use index-based iteration (for i := range) rather than value-based (for _, finding := range)
+	// to avoid implicitly copying the large (680 byte) evidence.Finding struct on every iteration.
 	for i := range baseline {
 		if baseline[i].Identity.FingerprintV1.IsZero() {
 			continue
@@ -76,6 +78,7 @@ func (Service) Compare(current []evidence.Finding, baseline []evidence.Finding) 
 	}
 
 	seenCurrent := make(map[evidence.Hash]struct{}, len(current))
+	// Optimize slice iteration by using index access to prevent large struct copies.
 	for i := range current {
 		fingerprint := current[i].Identity.FingerprintV1
 		if fingerprint.IsZero() {
@@ -113,6 +116,7 @@ func (Service) Evaluate(_ context.Context, findings []evidence.Finding, diff Bas
 	}
 
 	filtered := make([]evidence.Finding, 0, len(evaluated))
+	// Optimize slice iteration by using index access to prevent large struct copies.
 	for i := range evaluated {
 		if isAllowlisted(policy.Allowlist, evaluated[i]) {
 			continue
@@ -123,6 +127,7 @@ func (Service) Evaluate(_ context.Context, findings []evidence.Finding, diff Bas
 	violations := make([]Violation, 0)
 	if threshold := normalizeSeverityLabel(policy.FailOnSeverity); threshold != "" {
 		count := 0
+		// Optimize slice iteration by using index access to prevent large struct copies.
 		for i := range filtered {
 			if meetsSeverityThreshold(filtered[i].Severity.Label, threshold) {
 				count++
@@ -195,6 +200,7 @@ func isAllowlisted(entries []AllowlistEntry, finding evidence.Finding) bool {
 
 func countBySeverity(findings []evidence.Finding) map[evidence.SeverityLabel]int {
 	counts := make(map[evidence.SeverityLabel]int, 5)
+	// Optimize slice iteration by using index access to prevent large struct copies.
 	for i := range findings {
 		counts[normalizeSeverityLabel(findings[i].Severity.Label)]++
 	}
