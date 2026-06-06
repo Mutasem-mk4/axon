@@ -1,0 +1,3 @@
+## YYYY-MM-DD - Fix Protobuf Initialization Panic (v2)
+**Learning:** Bumping `google.golang.org/protobuf` can cause `slice bounds out of range [-1:]` panics in `filedesc.newRawFile` because older generated `.pb.go` code is incompatible with the newer runtime library internals. Instead of pinning the older version (which fails because `go mod tidy` or other tools inevitably bump it), the correct fix is to regenerate the protobuf files using `protoc` so that the generated Go code matches the new library version.
+**Action:** Regenerated `api/proto/v1/axon.pb.go` and `api/proto/v1/axon_grpc.pb.go` using `protoc-gen-go` and `protoc-gen-go-grpc` compatible with the latest protobuf version, and let `go mod tidy` retain the new versions.

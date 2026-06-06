@@ -1,0 +1,3 @@
+## YYYY-MM-DD - Fix Protobuf Initialization Panic
+**Learning:** Actions that trigger downloading newer versions of `google.golang.org/protobuf` (e.g., running `go mod tidy` or `go build`) can cause initialization panics (`slice bounds out of range [-1:]` in `filedesc.newRawFile`) when the application runs, due to incompatibilities with the existing `api/proto/v1/*.pb.go` files. We must either regenerate the protobuf files or downgrade `protobuf` to the previous version in `go.mod`.
+**Action:** Reverted `go.mod` and `go.sum` back to HEAD to keep the existing `google.golang.org/protobuf` version, so that the pre-generated `api/proto/v1/axon.pb.go` remains compatible and the tests/binary run without crashing.
